@@ -1,48 +1,29 @@
-// ===== 纯 CSS 粒子星空背景（不依赖任何外部库） =====
+// ===== 粒子星空背景 =====
 function initParticles() {
     var canvas = document.createElement('canvas');
     canvas.id = 'bgStarCanvas';
     canvas.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:-1;';
     document.body.prepend(canvas);
-
     var ctx = canvas.getContext('2d');
-    var stars = [];
-    var W, H;
-
-    function resize() {
-        W = window.innerWidth;
-        H = window.innerHeight;
-        canvas.width = W;
-        canvas.height = H;
-    }
+    var stars = [], W, H;
+    function resize() { W = window.innerWidth; H = window.innerHeight; canvas.width = W; canvas.height = H; }
     resize();
     window.addEventListener('resize', resize);
-
-    // 创建星星
     for (var i = 0; i < 200; i++) {
         stars.push({
-            x: Math.random() * W,
-            y: Math.random() * H,
+            x: Math.random() * W, y: Math.random() * H,
             r: Math.random() * 2 + 0.5,
-            dx: (Math.random() - 0.5) * 0.3,
-            dy: (Math.random() - 0.5) * 0.3,
-            a: Math.random() * 0.8 + 0.2,
-            da: (Math.random() - 0.5) * 0.005
+            dx: (Math.random() - 0.5) * 0.3, dy: (Math.random() - 0.5) * 0.3,
+            a: Math.random() * 0.8 + 0.2, da: (Math.random() - 0.5) * 0.005
         });
     }
-
     function draw() {
         ctx.clearRect(0, 0, W, H);
         stars.forEach(function(s) {
-            s.x += s.dx;
-            s.y += s.dy;
-            s.a += s.da;
+            s.x += s.dx; s.y += s.dy; s.a += s.da;
             if (s.a > 1 || s.a < 0.1) s.da = -s.da;
-            if (s.x < 0) s.x = W;
-            if (s.x > W) s.x = 0;
-            if (s.y < 0) s.y = H;
-            if (s.y > H) s.y = 0;
-
+            if (s.x < 0) s.x = W; if (s.x > W) s.x = 0;
+            if (s.y < 0) s.y = H; if (s.y > H) s.y = 0;
             ctx.beginPath();
             ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
             ctx.fillStyle = 'rgba(255,255,255,' + s.a + ')';
@@ -53,64 +34,120 @@ function initParticles() {
     draw();
 }
 
-// ===== 行星数据（真实比例） =====
-// 真实直径 (km): 太阳 1,392,700
-// 行星相对太阳的直径比率 * 视觉缩放系数
-// 用 pow(ratio, 0.35) 做视觉压缩，保持大小顺序但让小的可见
-var SUN_RADIUS = 5; // 太阳视觉半径（基准）
+// ===== 行星真实数据 =====
+var SUN_RADIUS = 5;
 
+// 真实公转周期（地球年）、自转周期（地球日）、J2000 平均黄经（度）
 var planetData = [
-    { name:'水星', icon:'☿', 
-      realRatio:0.0035,  // 真实相对太阳直径
-      dist:8,  color:0xaaaaaa,
-      info:{ ch:'最小的行星，距太阳最近，表面温度极昼夜温差大（-180°C~430°C）。',
-             en:'Smallest planet, closest to Sun, extreme temperature swings.' } },
-    { name:'金星', icon:'♀', 
-      realRatio:0.0087,
-      dist:12, color:0xffaa00,
-      info:{ ch:'最热的行星，大气浓厚含二氧化碳，表面温度可达465°C。',
-             en:'Hottest planet, thick CO₂ atmosphere, surface up to 465°C.' } },
-    { name:'地球', icon:'🌍', 
-      realRatio:0.0092,
-      dist:16, color:0x4488ff,
-      info:{ ch:'我们的家园，目前已知唯一拥有液态水和生命的星球。',
+    { name:'水星', icon:'☿', realRatio:0.0035, dist:8,  color:0xaaaaaa,
+      orbitalPeriod:0.2408, rotationPeriod:58.646,
+      L0:252.25084,
+      info:{ ch:'距太阳最近，表面温差极大（-180°C~430°C）。',
+             en:'Closest to the Sun, extreme temperature swings.' } },
+    { name:'金星', icon:'♀', realRatio:0.0087, dist:12, color:0xffaa00,
+      orbitalPeriod:0.6152, rotationPeriod:-243.025,
+      L0:181.97973,
+      info:{ ch:'最热行星，浓厚CO₂大气，表面温度465°C。',
+             en:'Hottest planet, thick CO₂ atmosphere, 465°C surface.' } },
+    { name:'地球', icon:'🌍', realRatio:0.0092, dist:16, color:0x4488ff,
+      orbitalPeriod:1.0, rotationPeriod:0.9973,
+      L0:100.46435,
+      info:{ ch:'我们的家园，唯一已知拥有液态水和生命的星球。',
              en:'Our home, the only known planet with liquid water and life.' } },
-    { name:'火星', icon:'♂',  
-      realRatio:0.0049,
-      dist:20, color:0xcc4400,
-      info:{ ch:'红色星球，拥有太阳系最高峰奥林匹斯山。已有多个探测器到达。',
-             en:'Red Planet, home to Olympus Mons, the tallest mountain in solar system.' } },
-    { name:'木星', icon:'♃', 
-      realRatio:0.1027,
-      dist:28, color:0xd4a574,
-      info:{ ch:'太阳系最大行星，大红斑风暴已持续数百年。',
-             en:'Largest planet, Great Red Spot storm has raged for centuries.' } },
-    { name:'土星', icon:'♄', 
-      realRatio:0.0865,
-      dist:36, color:0xeeddbb,
+    { name:'火星', icon:'♂',  realRatio:0.0049, dist:20, color:0xcc4400,
+      orbitalPeriod:1.8808, rotationPeriod:1.02596,
+      L0:355.45332,
+      info:{ ch:'红色星球，拥有太阳系最高峰奥林匹斯山。',
+             en:'Red Planet, home to the solar system\'s tallest mountain.' } },
+    { name:'木星', icon:'♃', realRatio:0.1027, dist:28, color:0xd4a574,
+      orbitalPeriod:11.862, rotationPeriod:0.41354,
+      L0:34.33479,
+      info:{ ch:'最大行星，大红斑风暴已持续数百年。',
+             en:'Largest planet, Great Red Spot storm for centuries.' } },
+    { name:'土星', icon:'♄', realRatio:0.0865, dist:36, color:0xeeddbb,
+      orbitalPeriod:29.457, rotationPeriod:0.44403,
+      L0:49.94424,
       info:{ ch:'以壮观的环系统闻名，密度低于水，有82颗已知卫星。',
-             en:'Famous for spectacular ring system, lower density than water.' } },
-    { name:'天王星', icon:'♅', 
-      realRatio:0.0367,
-      dist:44, color:0x44aaff,
-      info:{ ch:'冰巨星，自转轴几乎与轨道平行，像"躺"着转。',
-             en:'Ice giant, rotates on its side with extreme axial tilt.' } },
-    { name:'海王星', icon:'♆', 
-      realRatio:0.0356,
-      dist:52, color:0x3344ee,
-      info:{ ch:'太阳系最远行星，风速可达2100km/h，是太阳系风速最快的。',
-             en:'Farthest planet, fastest winds in solar system up to 2,100 km/h.' } }
+             en:'Spectacular ring system, less dense than water.' } },
+    { name:'天王星', icon:'♅', realRatio:0.0367, dist:44, color:0x44aaff,
+      orbitalPeriod:84.011, rotationPeriod:-0.71833,
+      L0:313.23218,
+      info:{ ch:'冰巨星，自转轴几乎与轨道平行，"躺着"转。',
+             en:'Ice giant with extreme 98° axial tilt.' } },
+    { name:'海王星', icon:'♆', realRatio:0.0356, dist:52, color:0x3344ee,
+      orbitalPeriod:164.79, rotationPeriod:0.67125,
+      L0:304.88003,
+      info:{ ch:'最远行星，风速可达2100km/h，太阳系风速最快。',
+             en:'Fastest winds in solar system up to 2,100 km/h.' } }
 ];
 
-// 用平方根压缩法计算视觉半径：让小的可见、大的不超太阳
+// 视觉半径（基于真实比例平方根压缩）
 planetData.forEach(function(p) {
-    // pow(ratio, 0.35) 保留大小顺序，不等比例失真
     p.radius = SUN_RADIUS * Math.pow(p.realRatio, 0.37);
 });
 
-// 验证：太阳 = 5, 木星 ≈ 2.2, 地球 ≈ 0.95, 水星 ≈ 0.68 ✅
+// ===== 时间模拟引擎 =====
+// 基准：1 秒真实时间 = 1 小时模拟时间（地球公转可见速度）
+var SECONDS_PER_HOUR = 3600;
+var BASE_SPEED = 3600; // 1 real second = 1 simulated hour
 
-// ===== 程序化纹理生成 =====
+var simTime;      // 当前模拟时间（毫秒时间戳）
+var speedMultiplier = 1; // 速度倍率
+var isPaused = false;
+var lastRealTime;
+
+function initTimeEngine() {
+    simTime = new Date().getTime(); // 从当前时间开始
+    lastRealTime = performance.now();
+}
+
+function updateTime() {
+    if (isPaused) {
+        lastRealTime = performance.now();
+        return;
+    }
+    var now = performance.now();
+    var realDelta = (now - lastRealTime) / 1000; // 秒
+    lastRealTime = now;
+
+    var simDelta = realDelta * BASE_SPEED * speedMultiplier * 1000; // 毫秒
+    simTime += simDelta;
+}
+
+function getSimDate() {
+    return new Date(simTime);
+}
+
+// 计算行星当前角度（基于模拟时间）
+function getPlanetAngle(p) {
+    // 从 J2000.0 到当前模拟时间的天数
+    var j2000 = new Date('2000-01-01T12:00:00Z').getTime();
+    var daysSinceJ2000 = (simTime - j2000) / 86400000;
+
+    // 平均运动：度/天
+    var orbitalDays = p.orbitalPeriod * 365.25;
+    var meanMotion = 360 / orbitalDays;
+
+    // 当前平黄经 = 初始平黄经 + 平均运动 × 天数
+    var L = p.L0 + meanMotion * daysSinceJ2000;
+
+    // 转弧度，归一化到 0-2PI
+    var angle = (L % 360) / 180 * Math.PI;
+    return angle;
+}
+
+// 计算行星自转角度
+function getPlanetRotation(p) {
+    var j2000 = new Date('2000-01-01T12:00:00Z').getTime();
+    var daysSinceJ2000 = (simTime - j2000) / 86400000;
+    var period = Math.abs(p.rotationPeriod);
+    if (period < 0.001) return 0;
+    var direction = p.rotationPeriod > 0 ? 1 : -1;
+    var rotations = daysSinceJ2000 / period;
+    return (rotations % 1) * Math.PI * 2 * direction;
+}
+
+// ===== 纹理生成 =====
 function createPlanetTexture(color, variant) {
     var canvas = document.createElement('canvas');
     canvas.width = 256; canvas.height = 128;
@@ -166,13 +203,14 @@ function createSunTexture() {
     var cardContent = document.getElementById('cardContent');
     var cardClose = document.getElementById('cardClose');
     var cardIcon = document.getElementById('cardIcon');
-
     window.showPlanetCard = function(p) {
         cardTitle.textContent = p.name;
         cardIcon.textContent = p.icon || '🪐';
         cardContent.innerHTML =
             '<p><span class="label">距太阳：</span>' + (p.dist * 5) + ' 百万公里</p>' +
-            '<p><span class="label">相对大小：</span>' + (p.realRatio < 0.01 ? '小型（岩石行星）' : p.realRatio < 0.05 ? '中型（冰巨星）' : '巨型（气态巨星）') + '</p>' +
+            '<p><span class="label">公转周期：</span>' + p.orbitalPeriod.toFixed(2) + ' 地球年</p>' +
+            '<p><span class="label">自转周期：</span>' + Math.abs(p.rotationPeriod).toFixed(1) + ' 地球日' + (p.rotationPeriod < 0 ? '（逆向）' : '') + '</p>' +
+            '<p><span class="label">类型：</span>' + (p.realRatio < 0.01 ? '岩石行星' : p.realRatio < 0.05 ? '冰巨星' : '气态巨星') + '</p>' +
             '<p><span class="label">描述：</span>' + p.info.ch + '</p>' +
             '<p style="color:#888;font-size:0.85rem;margin-top:0.8rem;border-left:none;padding-left:0;"><em>' + p.info.en + '</em></p>';
         card.classList.add('show');
@@ -184,7 +222,7 @@ function createSunTexture() {
     });
 })();
 
-// ===== VR 360° 太阳系 =====
+// ===== VR/3D 场景 =====
 function initVR() {
     if (typeof THREE === 'undefined') {
         document.getElementById('vrContainer').innerHTML = '<p style="color:red;padding:3rem;">Three.js 加载失败，请检查网络连接</p>';
@@ -194,11 +232,12 @@ function initVR() {
     var container = document.getElementById('vrContainer');
     if (!container) return;
 
+    // 场景
     var scene = new THREE.Scene();
     var w = container.clientWidth || 800;
     var h = container.clientHeight || 600;
     var camera = new THREE.PerspectiveCamera(60, w / h, 0.1, 1000);
-    camera.position.set(0, 25, 55);
+    camera.position.set(0, 30, 60);
 
     var renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(w, h);
@@ -206,7 +245,7 @@ function initVR() {
     renderer.xr.enabled = true;
     container.appendChild(renderer.domElement);
 
-    // 全屏沉浸模式
+    // 全屏切换
     var fullscreenBtn = document.getElementById('fullscreenBtn');
     var isFullscreen = false;
     var scrollY = 0;
@@ -227,33 +266,78 @@ function initVR() {
             fullscreenBtn.textContent = '⛶';
             fullscreenBtn.title = '全屏沉浸';
             if (bgCanvas) bgCanvas.style.display = '';
-            // 恢复滚动位置
-            window.scrollTo({ top: scrollY, behavior: 'instant' });
         }
-        // 重新调整渲染器尺寸
         setTimeout(function() {
-            var w = container.clientWidth;
-            var h = container.clientHeight;
-            if (w > 0 && h > 0) {
-                camera.aspect = w / h;
-                camera.updateProjectionMatrix();
-                renderer.setSize(w, h);
-            }
+            var cw = container.clientWidth, ch = container.clientHeight;
+            if (cw > 0 && ch > 0) { camera.aspect = cw/ch; camera.updateProjectionMatrix(); renderer.setSize(cw, ch); }
         }, 50);
     }
-
-    if (fullscreenBtn) {
-        fullscreenBtn.addEventListener('click', toggleFullscreen);
-    }
-
-    // ESC 退出全屏
+    if (fullscreenBtn) fullscreenBtn.addEventListener('click', toggleFullscreen);
     document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape' && isFullscreen) {
-            toggleFullscreen();
-        }
+        if (e.key === 'Escape' && isFullscreen) toggleFullscreen();
     });
 
-    // 自定义 VR 按钮
+    // 光照
+    scene.add(new THREE.AmbientLight(0x404060, 0.4));
+    var sunLight = new THREE.PointLight(0xffffff, 2, 500);
+    sunLight.position.set(0, 0, 0);
+    scene.add(sunLight);
+
+    // 星空背景
+    var starGeo = new THREE.BufferGeometry();
+    var starCount = 3000;
+    var pos = new Float32Array(starCount * 3);
+    for (var i = 0; i < starCount; i++) {
+        var r = 150 + Math.random() * 200;
+        var theta = Math.random() * Math.PI * 2;
+        var phi = Math.acos(2 * Math.random() - 1);
+        pos[i*3] = r * Math.sin(phi) * Math.cos(theta);
+        pos[i*3+1] = r * Math.cos(phi);
+        pos[i*3+2] = r * Math.sin(phi) * Math.sin(theta);
+    }
+    starGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({
+        size: 1.2, color: 0xffffff, transparent: true, opacity: 0.8,
+        blending: THREE.AdditiveBlending, sizeAttenuation: true
+    })));
+
+    // 太阳
+    var sun = new THREE.Mesh(
+        new THREE.SphereGeometry(SUN_RADIUS, 64, 64),
+        new THREE.MeshBasicMaterial({ map: createSunTexture() })
+    );
+    scene.add(sun);
+    var glow = new THREE.Mesh(
+        new THREE.SphereGeometry(SUN_RADIUS * 1.16, 32, 32),
+        new THREE.MeshBasicMaterial({ color: 0xff8800, transparent: true, opacity: 0.12, side: THREE.BackSide })
+    );
+    scene.add(glow);
+
+    // 创建行星
+    var planets = planetData.map(function(p) {
+        var tex = createPlanetTexture(p.color, (p.name==='木星'||p.name==='土星') ? 'banded' : 'light');
+        var mesh = new THREE.Mesh(
+            new THREE.SphereGeometry(p.radius, 32, 32),
+            new THREE.MeshStandardMaterial({ map: tex, roughness: 0.7, metalness: 0.1 })
+        );
+        var angle = getPlanetAngle(p);
+        mesh.position.set(Math.cos(angle) * p.dist, 0, Math.sin(angle) * p.dist);
+        mesh.rotation.y = getPlanetRotation(p);
+        scene.add(mesh);
+        return { mesh: mesh, data: p };
+    });
+
+    // 轨道环
+    planetData.forEach(function(p) {
+        var ring = new THREE.Mesh(
+            new THREE.RingGeometry(p.dist - 0.05, p.dist + 0.05, 64),
+            new THREE.MeshBasicMaterial({ color: 0x00ffff, side: THREE.DoubleSide, transparent: true, opacity: 0.12 })
+        );
+        ring.rotation.x = -Math.PI / 2;
+        scene.add(ring);
+    });
+
+    // VR 按钮
     try {
         var vrBtn = document.createElement('button');
         vrBtn.id = 'customVRButton';
@@ -273,80 +357,11 @@ function initVR() {
                     alert('VR 不可用: ' + err.message);
                 });
             } else {
-                alert('您的浏览器不支持 WebXR。请使用支持 VR 的浏览器（Chrome / Edge）打开。');
+                alert('您的浏览器不支持 WebXR。请使用 Chrome/Edge。');
             }
         };
         document.body.appendChild(vrBtn);
     } catch(e) {}
-
-    // 光照
-    scene.add(new THREE.AmbientLight(0x404060, 0.4));
-    var sunLight = new THREE.PointLight(0xffffff, 2, 500);
-    sunLight.position.set(0, 0, 0);
-    scene.add(sunLight);
-
-    // 远处星空（Three.js Points）
-    var starGeo = new THREE.BufferGeometry();
-    var starCount = 3000;
-    var pos = new Float32Array(starCount * 3);
-    var colors = new Float32Array(starCount * 3);
-    for (var i = 0; i < starCount; i++) {
-        var r = 150 + Math.random() * 200;
-        var theta = Math.random() * Math.PI * 2;
-        var phi = Math.acos(2 * Math.random() - 1);
-        pos[i*3] = r * Math.sin(phi) * Math.cos(theta);
-        pos[i*3+1] = r * Math.cos(phi);
-        pos[i*3+2] = r * Math.sin(phi) * Math.sin(theta);
-        var bright = 0.5 + Math.random() * 0.5;
-        colors[i*3] = bright;
-        colors[i*3+1] = bright;
-        colors[i*3+2] = bright;
-    }
-    starGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-    starGeo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-    var starMat = new THREE.PointsMaterial({
-        size: 1.2, vertexColors: true, transparent: true, opacity: 0.8,
-        blending: THREE.AdditiveBlending, sizeAttenuation: true
-    });
-    scene.add(new THREE.Points(starGeo, starMat));
-
-    // 太阳
-    var sun = new THREE.Mesh(
-        new THREE.SphereGeometry(5, 64, 64),
-        new THREE.MeshBasicMaterial({ map: createSunTexture() })
-    );
-    scene.add(sun);
-
-    // 太阳光晕
-    var glow = new THREE.Mesh(
-        new THREE.SphereGeometry(5.8, 32, 32),
-        new THREE.MeshBasicMaterial({ color: 0xff8800, transparent: true, opacity: 0.12, side: THREE.BackSide })
-    );
-    scene.add(glow);
-
-    // 创建行星（角度均匀分布，不重叠）
-    var planets = planetData.map(function(p, idx) {
-        var tex = createPlanetTexture(p.color, (p.name==='木星'||p.name==='土星') ? 'banded' : 'light');
-        var mesh = new THREE.Mesh(
-            new THREE.SphereGeometry(p.radius, 32, 32),
-            new THREE.MeshStandardMaterial({ map: tex, roughness: 0.7, metalness: 0.1 })
-        );
-        // 等角度间隔分布，不再随机
-        var angle = (idx / planetData.length) * Math.PI * 2;
-        mesh.position.set(Math.cos(angle)*p.dist, 0, Math.sin(angle)*p.dist);
-        scene.add(mesh);
-        return { mesh: mesh, angle: angle, data: p };
-    });
-
-    // 轨道环
-    planets.forEach(function(p) {
-        var ring = new THREE.Mesh(
-            new THREE.RingGeometry(p.data.dist-0.05, p.data.dist+0.05, 64),
-            new THREE.MeshBasicMaterial({ color: 0x00ffff, side: THREE.DoubleSide, transparent: true, opacity: 0.12 })
-        );
-        ring.rotation.x = -Math.PI / 2;
-        scene.add(ring);
-    });
 
     // OrbitControls
     var controls = new THREE.OrbitControls(camera, renderer.domElement);
@@ -377,29 +392,74 @@ function initVR() {
         }
     });
 
-    // 动画
+    // ===== 时间 UI 控制 =====
+    initTimeEngine();
+
+    var timeDisplay = document.getElementById('timeDisplay');
+    var pauseBtn = document.getElementById('pauseBtn');
+    var speedSlider = document.getElementById('timeSpeedSlider');
+    var speedLabel = document.getElementById('speedLabel');
+
+    if (pauseBtn) {
+        pauseBtn.addEventListener('click', function() {
+            isPaused = !isPaused;
+            pauseBtn.textContent = isPaused ? '▶' : '⏸';
+            pauseBtn.title = isPaused ? '继续' : '暂停';
+            if (!isPaused) lastRealTime = performance.now();
+        });
+    }
+
+    if (speedSlider) {
+        speedSlider.addEventListener('input', function() {
+            speedMultiplier = Math.pow(10, parseFloat(this.value));
+            speedLabel.textContent = (speedMultiplier < 1 ? speedMultiplier.toFixed(1) : Math.round(speedMultiplier)) + '×';
+        });
+    }
+
+    // ===== 主循环 =====
     function animate() {
         requestAnimationFrame(animate);
+
+        // 更新时间
+        updateTime();
+
+        // 更新行星位置
+        planets.forEach(function(p) {
+            var angle = getPlanetAngle(p.data);
+            p.mesh.position.x = Math.cos(angle) * p.data.dist;
+            p.mesh.position.z = Math.sin(angle) * p.data.dist;
+            p.mesh.rotation.y = getPlanetRotation(p.data);
+        });
+
+        // 太阳自转
         sun.rotation.y += 0.001;
         glow.rotation.y += 0.0005;
-        planets.forEach(function(p) {
-            p.angle += 0.002 + (0.006 / (p.data.dist / 5));
-            p.mesh.position.x = Math.cos(p.angle) * p.data.dist;
-            p.mesh.position.z = Math.sin(p.angle) * p.data.dist;
-            p.mesh.rotation.y += 0.005;
-        });
+
+        // 更新时间显示
+        if (timeDisplay) {
+            var d = getSimDate();
+            var y = d.getFullYear();
+            var m = String(d.getMonth() + 1).padStart(2, '0');
+            var day = String(d.getDate()).padStart(2, '0');
+            var hh = String(d.getHours()).padStart(2, '0');
+            var mm = String(d.getMinutes()).padStart(2, '0');
+            var ss = String(d.getSeconds()).padStart(2, '0');
+            timeDisplay.textContent = y + '-' + m + '-' + day + ' ' + hh + ':' + mm + ':' + ss;
+        }
+
         controls.update();
         renderer.render(scene, camera);
     }
+
     animate();
 
     // 自适应
     var ro = new ResizeObserver(function() {
-        var w2 = container.clientWidth, h2 = container.clientHeight;
-        if (w2 > 0 && h2 > 0) {
-            camera.aspect = w2 / h2;
+        var cw = container.clientWidth, ch = container.clientHeight;
+        if (cw > 0 && ch > 0) {
+            camera.aspect = cw / ch;
             camera.updateProjectionMatrix();
-            renderer.setSize(w2, h2);
+            renderer.setSize(cw, ch);
         }
     });
     ro.observe(container);

@@ -3,22 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
-    <title>太空探索博物馆 - 360° VR 太阳系</title>
-    <meta name="description" content="沉浸式太空探索博物馆，3D太阳系展示，支持VR模式。探索八大行星，了解宇宙奥秘。">
-    <meta property="og:title" content="太空探索博物馆 - VR太阳系展览">
-    <meta property="og:description" content="沉浸式太空探索博物馆，3D太阳系展示，支持VR模式。">
+    <title>太空探索博物馆 - 3D太阳系模拟器</title>
+    <meta name="description" content="沉浸式太空探索博物馆，真实比例3D太阳系模拟，支持公转/自转周期、时间加速、VR模式。">
+    <meta property="og:title" content="太空探索博物馆 - 太阳系模拟器">
+    <meta property="og:description" content="沉浸式太空探索博物馆，真实比例3D太阳系模拟。">
     <meta property="og:url" content="https://yexuejc.github.io/space-exhibition-museum/">
     <meta property="og:type" content="website">
     <link rel="stylesheet" href="style.css">
-
-    <!-- Three.js 核心库 (使用稳定的 r128 版本) -->
+    <!-- Three.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 </head>
 <body>
-    <div id="particles-js"></div>
-
-    <!-- 行星信息卡片（隐藏） -->
+    <!-- 行星信息卡片 -->
     <div id="planetCard" class="planet-card">
         <button class="card-close" id="cardClose">✕</button>
         <div class="planet-card-inner">
@@ -36,21 +33,34 @@
 
     <section class="hero">
         <div class="hero-content">
-            <h2>踏入深度空间之旅</h2>
-            <p>从此时开始，你将亲临太空的壮美。</p>
-            <a href="#solarSystemVR" class="cta-btn">🌠 查看太阳系三维模型</a>
+            <h2>太阳系真实模拟器</h2>
+            <p>基于真实公转/自转周期，从当前时间开始模拟行星运动。<br>你可以加速时间、暂停观察，点击任何行星获取科普信息。</p>
+            <a href="#solarSystemVR" class="cta-btn">🌠 进入太阳系</a>
         </div>
     </section>
 
     <section id="solarSystemVR" class="vrExhibit">
-        <h2>🌠 360° 全景太阳系</h2>
+        <h2>🌠 太阳系实时模拟</h2>
         <div id="vrContainer">
             <button id="fullscreenBtn" class="fullscreen-btn" title="全屏沉浸">⛶</button>
-            <div id="vrRenderTarget"></div>
+
+            <!-- 时间控制面板 -->
+            <div id="timePanel" class="time-panel">
+                <div class="tp-row">
+                    <span class="tp-icon">🕐</span>
+                    <span class="tp-date" id="timeDisplay">加载中...</span>
+                    <button id="pauseBtn" class="tp-btn" title="暂停/继续">⏸</button>
+                </div>
+                <div class="tp-row">
+                    <span class="tp-speed-label">速度</span>
+                    <input type="range" id="timeSpeedSlider" class="tp-slider" min="-2" max="3" step="0.1" value="0">
+                    <span class="tp-speed-val" id="speedLabel">1×</span>
+                </div>
+            </div>
         </div>
         <div class="vr-controls">
-            <p class="vr-hint">🖱️ 拖拽旋转 · 滚轮缩放 · 点击行星查看详情</p>
-            <p class="vr-hint">🥽 支持 VR 头显设备（Oculus Quest / HTC Vive）</p>
+            <p class="vr-hint">🖱️ 拖拽旋转 · 滚轮缩放 · 点击行星查看详情 · ⏱ 拖动速度滑块加速时间</p>
+            <p class="vr-hint">🥽 支持 VR 头显设备</p>
         </div>
     </section>
 
