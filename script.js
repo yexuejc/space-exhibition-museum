@@ -177,6 +177,53 @@ function initVR() {
     renderer.xr.enabled = true;
     container.appendChild(renderer.domElement);
 
+    // 全屏沉浸模式
+    var fullscreenBtn = document.getElementById('fullscreenBtn');
+    var isFullscreen = false;
+    var scrollY = 0;
+    var bgCanvas = document.getElementById('bgStarCanvas');
+
+    function toggleFullscreen() {
+        isFullscreen = !isFullscreen;
+        if (isFullscreen) {
+            scrollY = window.scrollY;
+            container.classList.add('is-fullscreen');
+            document.body.classList.add('has-fullscreen');
+            fullscreenBtn.textContent = '✕';
+            fullscreenBtn.title = '退出全屏';
+            if (bgCanvas) bgCanvas.style.display = 'none';
+        } else {
+            container.classList.remove('is-fullscreen');
+            document.body.classList.remove('has-fullscreen');
+            fullscreenBtn.textContent = '⛶';
+            fullscreenBtn.title = '全屏沉浸';
+            if (bgCanvas) bgCanvas.style.display = '';
+            // 恢复滚动位置
+            window.scrollTo({ top: scrollY, behavior: 'instant' });
+        }
+        // 重新调整渲染器尺寸
+        setTimeout(function() {
+            var w = container.clientWidth;
+            var h = container.clientHeight;
+            if (w > 0 && h > 0) {
+                camera.aspect = w / h;
+                camera.updateProjectionMatrix();
+                renderer.setSize(w, h);
+            }
+        }, 50);
+    }
+
+    if (fullscreenBtn) {
+        fullscreenBtn.addEventListener('click', toggleFullscreen);
+    }
+
+    // ESC 退出全屏
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && isFullscreen) {
+            toggleFullscreen();
+        }
+    });
+
     // 自定义 VR 按钮
     try {
         var vrBtn = document.createElement('button');
