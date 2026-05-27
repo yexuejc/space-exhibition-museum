@@ -10,23 +10,12 @@
     <meta property="og:url" content="https://yexuejc.github.io/space-exhibition-museum/">
     <meta property="og:type" content="website">
     <link rel="stylesheet" href="style.css">
-    <!-- Three.js -->
+    <!-- Three.js CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/renderers/CSS2DRenderer.js"></script>
 </head>
 <body>
-    <!-- 行星信息卡片 -->
-    <div id="planetCard" class="planet-card">
-        <button class="card-close" id="cardClose">✕</button>
-        <div class="planet-card-inner">
-            <div class="planet-icon" id="cardIcon">🪐</div>
-            <h2 id="cardTitle">行星名称</h2>
-            <div class="card-divider"></div>
-            <div id="cardContent" class="card-body"></div>
-        </div>
-    </div>
-
     <header>
         <h1>🌌 太空探索博物馆</h1>
         <p>探索宇宙的奥秘，感受星辰的呼吸</p>
@@ -43,57 +32,13 @@
     <section id="solarSystemVR" class="vrExhibit">
         <h2>🌠 太阳系实时模拟</h2>
         <div id="vrContainer">
-            <!-- 顶部操作按钮 -->
-            <button id="fullscreenBtn" class="fullscreen-btn" title="全屏沉浸">⛶</button>
-            <button id="labelToggleBtn" class="label-toggle-btn" title="切换行星名称标注">🏷️</button>
-            <button id="enterMapBtn" class="enter-map-btn" title="进入地球地图模式">🗺️</button>
-
-            <!-- 左侧缩放面板 -->
-            <div id="zoomPanel" class="zoom-panel">
-                <span class="zoom-icon">🔍</span>
-                <input type="range" id="zoomSlider" class="zoom-slider" min="0" max="1000" value="500" orient="vertical">
-                <span class="zoom-label" id="zoomLabel">50%</span>
-            </div>
-
-            <!-- 时间控制面板 -->
-            <div id="timePanel" class="time-panel">
-                <div class="tp-row">
-                    <span class="tp-icon">🕐</span>
-                    <span class="tp-date" id="timeDisplay">加载中...</span>
-                    <button id="pauseBtn" class="tp-btn" title="暂停/继续">⏸</button>
-                </div>
-                <div class="tp-row">
-                    <span class="tp-speed-label">速度</span>
-                    <input type="range" id="timeSpeedSlider" class="tp-slider" min="-2" max="3" step="0.1" value="0">
-                    <span class="tp-speed-val" id="speedLabel">1×</span>
-                </div>
-            </div>
+            <!-- Three.js 场景由 js 模块动态构建 -->
         </div>
         <div class="vr-controls">
             <p class="vr-hint">🖱️ 拖拽旋转 · 滚轮缩放 · <b>单击</b>看详情 · <b>双击</b>追踪聚焦 · <b>双击空白</b>回归</p>
             <p class="vr-hint">🏷️ 标注开关 · 🗺️ 靠近地球时进入地图模式 · 左侧滑块精细控制缩放</p>
         </div>
     </section>
-
-    <!-- 地图模式覆盖层 -->
-    <div id="mapOverlay" class="map-overlay">
-        <div class="map-toolbar">
-            <button id="exitMapBtn" class="map-exit-btn" title="返回太空">🚀 返回太空</button>
-            <span class="map-title">🌍 高德地图 · 地球表面</span>
-        </div>
-        <div id="mapContainer" class="map-container"></div>
-        <div id="mapSetupPrompt" class="map-setup-prompt" style="display:none;">
-            <div class="map-prompt-box">
-                <h3>🗺️ 高德地图待配置</h3>
-                <p>要启用地图模式，请提供你的高德地图 API Key：</p>
-                <div class="map-key-row">
-                    <input type="text" id="amapKeyInput" class="map-key-input" placeholder="请输入你的高德 JS API Key">
-                    <button id="amapKeySubmit" class="map-key-btn">确认</button>
-                </div>
-                <p class="map-key-hint">注册地址：<a href="https://lbs.amap.com/" target="_blank">https://lbs.amap.com/</a> → 控制台 → 应用管理</p>
-            </div>
-        </div>
-    </div>
 
     <section class="timeline">
         <h2>🚀 太空探索时间线</h2>
@@ -147,6 +92,15 @@
         <p>© 2026 太空探索博物馆 | 由 <a href="https://github.com/yexuejc">@yexuejc</a> 打造 🚀</p>
     </footer>
 
-    <script src="script.js"></script>
+    <!-- ===== 模块化 JS（按依赖顺序加载）===== -->
+    <script src="js/data.js"></script>
+    <script src="js/textures.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/solar-system.js"></script>
+    <script src="js/asteroids.js"></script>
+    <script src="js/moons.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/map-mode.js"></script>
+    <script src="js/app.js"></script>
 </body>
 </html>
