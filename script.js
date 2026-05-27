@@ -166,9 +166,30 @@ function initVR() {
     renderer.xr.enabled = true;
     container.appendChild(renderer.domElement);
 
-    // VR Button - 仅在 VRButton 可用时添加
-    if (typeof VRButton !== 'undefined') {
-        document.body.appendChild(VRButton.createButton(renderer));
+    // VR Button - 手动实现 WebXR 入口按钮
+    try {
+        var vrBtn = document.createElement('button');
+        vrBtn.id = 'customVRButton';
+        vrBtn.textContent = '🥽 进入 VR 模式';
+        vrBtn.style.cssText = 'position:fixed;bottom:30px;right:30px;padding:15px 25px;background:linear-gradient(45deg,#ff0088,#8000ff);color:#fff;border:none;border-radius:50px;font-size:16px;font-weight:bold;cursor:pointer;z-index:10000;box-shadow:0 0 20px rgba(255,0,136,0.6);transition:all 0.3s;';
+        vrBtn.onmouseover = function(){ this.style.transform = 'scale(1.05)'; };
+        vrBtn.onmouseout = function(){ this.style.transform = 'scale(1)'; };
+        vrBtn.onclick = function() {
+            if (renderer.xr.isPresenting) {
+                renderer.xr.endSession();
+                vrBtn.textContent = '🥽 进入 VR 模式';
+            } else {
+                navigator.xr.requestSession('immersive-vr').then(function(session) {
+                    renderer.xr.setSession(session);
+                    vrBtn.textContent = '🚪 退出 VR';
+                }).catch(function(err) {
+                    alert('无法启动 VR: ' + err.message + '\n请在 VR 设备上打开此页面');
+                });
+            }
+        };
+        document.body.appendChild(vrBtn);
+    } catch(e) {
+        console.log('VR not available:', e.message);
     }
 
     // 光照
