@@ -13,6 +13,7 @@
     <!-- Three.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/renderers/CSS2DRenderer.js"></script>
 </head>
 <body>
     <!-- 行星信息卡片 -->
@@ -43,6 +44,7 @@
         <h2>🌠 太阳系实时模拟</h2>
         <div id="vrContainer">
             <button id="fullscreenBtn" class="fullscreen-btn" title="全屏沉浸">⛶</button>
+            <button id="labelToggleBtn" class="label-toggle-btn" title="切换行星名称标注">🏷️</button>
 
             <!-- 时间控制面板 -->
             <div id="timePanel" class="time-panel">
@@ -59,8 +61,8 @@
             </div>
         </div>
         <div class="vr-controls">
-            <p class="vr-hint">🖱️ 拖拽旋转 · 滚轮缩放 · <b>单击</b>行星看详情 · <b>双击</b>行星追踪聚焦 · <b>双击空白</b>回归太阳 · ⏱ 拖动滑块加速时间</p>
-            <p class="vr-hint">🥽 支持 VR 头显设备</p>
+            <p class="vr-hint">🖱️ 拖拽旋转 · 滚轮缩放 · <b>单击</b>看详情 · <b>双击</b>追踪聚焦 · <b>双击空白</b>回归</p>
+            <p class="vr-hint">🏷️ 点击右上角标签按钮可开关行星名称 · 拉近视角名称自动显示</p>
         </div>
     </section>
 
