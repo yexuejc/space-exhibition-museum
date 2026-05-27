@@ -1,5 +1,10 @@
 // ===== 粒子星空背景 =====
 function initParticles() {
+    // 检查 tsParticles 是否已加载
+    if (typeof tsParticles === 'undefined') {
+        console.warn('tsParticles not loaded');
+        return;
+    }
     tsParticles.load("particles-js", {
         particles: {
             number: { value: 80, density: { enable: true, value_area: 800 } },
@@ -59,7 +64,7 @@ const planetData = [
              en:'Farthest planet, fastest winds in solar system up to 2,100 km/h.' } }
 ];
 
-// ===== 程序化纹理生成（无需外部图片） =====
+// ===== 程序化纹理生成（不依赖外部图片） =====
 function createPlanetTexture(color, variant) {
     const canvas = document.createElement('canvas');
     canvas.width = 256; canvas.height = 128;
@@ -108,8 +113,9 @@ function createSunTexture() {
 }
 
 // ===== 行星信息卡片 =====
-const card = document.getElementById('planetCard');
-if (card) {
+(function initCard() {
+    const card = document.getElementById('planetCard');
+    if (!card) return;
     const cardTitle = document.getElementById('cardTitle');
     const cardContent = document.getElementById('cardContent');
     const cardClose = document.getElementById('cardClose');
@@ -118,41 +124,52 @@ if (card) {
     window.showPlanetCard = function(p) {
         cardTitle.textContent = p.name;
         cardIcon.textContent = p.icon || '🪐';
-        cardContent.innerHTML = `
-            <p><span class="label">距太阳：</span>${p.dist * 5} 百万公里</p>
-            <p><span class="label">大小：</span>${p.radius < 1 ? '小型' : p.radius < 5 ? '中型' : '巨型'}</p>
-            <p><span class="label">描述：</span>${p.info.ch}</p>
-            <p style="color:#888;font-size:0.85rem;margin-top:0.8rem;border-left:none;padding-left:0;">
-                <em>${p.info.en}</em>
-            </p>
-        `;
+        cardContent.innerHTML = [
+            '<p><span class="label">距太阳：</span>' + (p.dist * 5) + ' 百万公里</p>',
+            '<p><span class="label">大小：</span>' + (p.radius < 1 ? '小型' : p.radius < 5 ? '中型' : '巨型') + '</p>',
+            '<p><span class="label">描述：</span>' + p.info.ch + '</p>',
+            '<p style="color:#888;font-size:0.85rem;margin-top:0.8rem;border-left:none;padding-left:0;"><em>' + p.info.en + '</em></p>'
+        ].join('');
         card.classList.add('show');
     };
     window.hidePlanetCard = function() { card.classList.remove('show'); };
     if (cardClose) cardClose.addEventListener('click', window.hidePlanetCard);
-}
+
+    // ESC 键关闭
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') window.hidePlanetCard && window.hidePlanetCard();
+    });
+})();
 
 // ===== VR 360° 太阳系 =====
 function initVR() {
+    // 等待 Three.js 加载
+    if (typeof THREE === 'undefined') {
+        console.error('Three.js not loaded');
+        document.getElementById('vrContainer').innerHTML = '<p style="color:red;padding:3rem;">Three.js 加载失败，请检查网络连接</p>';
+        return;
+    }
+
     const container = document.getElementById('vrContainer');
     if (!container) return;
 
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(60, container.clientWidth/container.clientHeight, 0.1, 1000);
+    const width = container.clientWidth || 800;
+    const height = container.clientHeight || 600;
+    const camera = new THREE.PerspectiveCamera(60, width / height, 0.1, 1000);
     camera.position.set(0, 25, 55);
     camera.lookAt(0, 0, 0);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(container.clientWidth, container.clientHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(width, height);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     renderer.xr.enabled = true;
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     container.appendChild(renderer.domElement);
 
-    // VR 按钮
-    try { document.body.appendChild(VRButton.createButton(renderer)); }
-    catch(e) { console.log('VR button not available'); }
+    // VR Button - 仅在 VRButton 可用时添加
+    if (typeof VRButton !== 'undefined') {
+        document.body.appendChild(VRButton.createButton(renderer));
+    }
 
     // 光照
     scene.add(new THREE.AmbientLight(0x404060, 0.4));
@@ -195,22 +212,22 @@ function initVR() {
     scene.add(glow);
 
     // 创建行星
-    const planets = planetData.map(p => {
-        const tex = createPlanetTexture(p.color, (p.name==='木星'||p.name==='土星') ? 'banded' : 'light');
-        const mesh = new THREE.Mesh(
+    const planets = planetData.map(function(p) {
+        var tex = createPlanetTexture(p.color, (p.name==='木星'||p.name==='土星') ? 'banded' : 'light');
+        var mesh = new THREE.Mesh(
             new THREE.SphereGeometry(p.radius, 32, 32),
             new THREE.MeshStandardMaterial({ map: tex, roughness: 0.7, metalness: 0.1 })
         );
-        const angle = Math.random() * Math.PI * 2;
+        var angle = Math.random() * Math.PI * 2;
         mesh.position.set(Math.cos(angle)*p.dist, 0, Math.sin(angle)*p.dist);
         scene.add(mesh);
-        return { mesh, angle, ...p };
+        return { mesh: mesh, angle: angle, data: p };
     });
 
     // 轨道环
-    planets.forEach(p => {
-        const ring = new THREE.Mesh(
-            new THREE.RingGeometry(p.dist-0.05, p.dist+0.05, 64),
+    planets.forEach(function(p) {
+        var ring = new THREE.Mesh(
+            new THREE.RingGeometry(p.data.dist-0.05, p.data.dist+0.05, 64),
             new THREE.MeshBasicMaterial({ color: 0x00ffff, side: THREE.DoubleSide, transparent: true, opacity: 0.12 })
         );
         ring.rotation.x = -Math.PI / 2;
@@ -218,63 +235,84 @@ function initVR() {
     });
 
     // 控制器
-    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    var controls = new THREE.OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
     controls.minDistance = 10;
     controls.maxDistance = 180;
     controls.autoRotate = true;
     controls.autoRotateSpeed = 0.3;
+    controls.target.set(0, 0, 0);
 
     // 点击交互（射线检测）
-    const raycaster = new THREE.Raycaster();
-    const mouse = new THREE.Vector2();
-    const clickables = planets.map(p => p.mesh);
+    var raycaster = new THREE.Raycaster();
+    var mouse = new THREE.Vector2();
+    var clickables = planets.map(function(p) { return p.mesh; });
 
-    renderer.domElement.addEventListener('click', (event) => {
-        const rect = renderer.domElement.getBoundingClientRect();
+    renderer.domElement.addEventListener('click', function(event) {
+        var rect = renderer.domElement.getBoundingClientRect();
         mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
         mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
         raycaster.setFromCamera(mouse, camera);
-        const hits = raycaster.intersectObjects(clickables);
+        var hits = raycaster.intersectObjects(clickables);
         if (hits.length > 0) {
-            const hit = planets.find(p => p.mesh === hits[0].object);
-            if (hit && window.showPlanetCard) window.showPlanetCard(hit);
+            var hit = planets.find(function(p) { return p.mesh === hits[0].object; });
+            if (hit && window.showPlanetCard) window.showPlanetCard(hit.data);
         } else {
             if (window.hidePlanetCard) window.hidePlanetCard();
         }
     });
 
-    // 动画
+    // ===== 动画循环（兼容 r128，使用 requestAnimationFrame） =====
+    var lastTime = performance.now();
+
     function animate() {
+        requestAnimationFrame(animate);
+
+        var now = performance.now();
+        var delta = (now - lastTime) / 1000; // seconds
+        lastTime = now;
+
+        // 太阳自转
         sun.rotation.y += 0.001;
         glow.rotation.y += 0.0005;
-        planets.forEach(p => {
-            p.angle += 0.002 + (0.006 / (p.dist/5));
-            p.mesh.position.x = Math.cos(p.angle) * p.dist;
-            p.mesh.position.z = Math.sin(p.angle) * p.dist;
-            p.mesh.rotation.y += 0.005;
+
+        // 行星公转
+        planets.forEach(function(p) {
+            var speed = 0.002 + (0.006 / (p.data.dist / 5));
+            p.angle += speed;
+            p.mesh.position.x = Math.cos(p.angle) * p.data.dist;
+            p.mesh.position.z = Math.sin(p.angle) * p.data.dist;
+            p.mesh.rotation.y += 0.005 * (1 + delta * 30);
         });
+
         starField.rotation.y += 0.0001;
         controls.update();
         renderer.render(scene, camera);
     }
-    renderer.setAnimationLoop(animate);
 
-    // 自适应
-    const ro = new ResizeObserver(() => {
-        const w = container.clientWidth, h = container.clientHeight;
+    animate();
+
+    // 自适应窗口
+    var ro = new ResizeObserver(function() {
+        var w = container.clientWidth, h = container.clientHeight;
         if (w > 0 && h > 0) {
             camera.aspect = w / h;
             camera.updateProjectionMatrix();
             renderer.setSize(w, h);
         }
     });
-    ro.observe(container);
+    if (container) ro.observe(container);
 }
 
 // ===== 启动 =====
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', function() {
     initParticles();
-    initVR();
+
+    // 稍后启动 VR，确保 Three.js 加载完毕
+    if (document.readyState === 'complete') {
+        initVR();
+    } else {
+        window.addEventListener('load', initVR);
+    }
 });

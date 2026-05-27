@@ -10,10 +10,11 @@
     <meta property="og:url" content="https://yexuejc.github.io/space-exhibition-museum/">
     <meta property="og:type" content="website">
     <link rel="stylesheet" href="style.css">
-    <!-- Three.js -->
-    <script src="https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.165.0/examples/js/controls/OrbitControls.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.165.0/examples/js/webxr/VRButton.js"></script>
+
+    <!-- Three.js 核心库 (使用稳定的 r128 版本, 支持 examples/js) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/webxr/VRButton.js"></script>
 </head>
 <body>
     <div id="particles-js"></div>
@@ -103,7 +104,8 @@
         <p>© 2026 太空探索博物馆 | 由 <a href="https://github.com/yexuejc">@yexuejc</a> 打造 🚀</p>
     </footer>
 
-    <script src="https://cdn.jsdelivr.net/npm/tsparticles@2.12.0/tsparticles.min.js"></script>
+    <!-- tsParticles -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tsparticles/2.12.0/tsparticles.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
