@@ -754,6 +754,7 @@ function initVR() {
     var amapKeySubmit = document.getElementById('amapKeySubmit');
     var amapInstance = null;
     var amapKey = localStorage.getItem('amap_key') || '';
+    var amapDefaultCenter = [116.397428, 39.90923]; // 天安门
 
     function canEnterMapMode() {
         // 聚焦在地球上且非常靠近
@@ -809,13 +810,30 @@ function initVR() {
         try {
             amapInstance = new AMap.Map('mapContainer', {
                 viewMode: '3D',
-                zoom: 14,
-                center: [116.397428, 39.90923], // 天安门
-                mapStyle: 'amap://styles/light',
-                features: ['bg', 'road', 'building', 'point']
+                zoom: 15,
+                center: amapDefaultCenter,
+                mapStyle: 'amap://styles/3b8e7f8c7b8f8b8e7f8c7b8f8b8e7f8', // 幻影黑
+                features: ['bg', 'road', 'building', 'point'],
+                showIndoorMap: false,
+                pitch: 45,
+                rotation: 0
             });
             amapInstance.addControl(new AMap.ToolBar());
             amapInstance.addControl(new AMap.Scale());
+            amapInstance.addControl(new AMap.MapType({ defaultType: 0, showTraffic: false }));
+            // 添加地标标记
+            var marker = new AMap.Marker({
+                position: amapDefaultCenter,
+                title: '天安门广场',
+                label: { content: '📍 天安门广场', offset: new AMap.Pixel(0, -30) }
+            });
+            amapInstance.add(marker);
+            // 添加信息窗口
+            var info = new AMap.InfoWindow({
+                content: '<div style="padding:8px;font-size:14px;"><b>🏛️ 天安门广场</b><br>从太空看地球的第一站</div>',
+                offset: new AMap.Pixel(0, -40)
+            });
+            marker.on('click', function() { info.open(amapInstance, marker.getPosition()); });
         } catch(e) {
             mapContainer.innerHTML = '<div style="padding:3rem;text-align:center;color:#ff6464;">地图初始化失败: ' + e.message + '</div>';
         }
