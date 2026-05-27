@@ -757,10 +757,10 @@ function initVR() {
     var amapDefaultCenter = [116.397428, 39.90923]; // 天安门
 
     function canEnterMapMode() {
-        // 聚焦在地球上且非常靠近
+        // 聚焦在地球上，不要等拉太近就显示按钮
         if (!focusedPlanet || focusedPlanet.name !== '地球') return false;
         var dist = camera.position.distanceTo(controls.target);
-        return dist < 2.5;
+        return dist < 12;
     }
 
     function updateEnterMapButton() {
@@ -898,10 +898,12 @@ function initVR() {
         // 聚焦动画
         if (focusAnim) {
             focusAnim.progress += 0.025;
-            if (focusAnim.progress >= 1) { focusAnim.progress = 1; focusAnim = null; }
+            var finished = focusAnim.progress >= 1;
+            if (finished) focusAnim.progress = 1;
             var t = easeOutCubic(focusAnim.progress);
             controls.target.lerpVectors(focusAnim.startTarget, focusAnim.endTarget, t);
             camera.position.lerpVectors(focusAnim.startCam, focusAnim.endCam, t);
+            if (finished) focusAnim = null; // 必须在读取完所有属性后再置空！
         }
 
         // ===== 缩放滑块控制 =====
