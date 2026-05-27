@@ -788,20 +788,25 @@ function initVR() {
     function loadAmap(key) {
         if (amapInstance) { amapInstance.destroy(); amapInstance = null; }
         mapContainer.innerHTML = '';
-        // 检查 AMap 是否已加载
         if (typeof AMap !== 'undefined') {
             initAmapMap(key);
             return;
         }
-        // 动态加载 AMap JS API
         var script = document.createElement('script');
-        script.src = 'https://webapi.amap.com/maps?v=2.0&key=' + key;
+        script.src = 'https://webapi.amap.com/maps?v=2.0&key=' + key + '&plugin=AMap.ToolBar,AMap.Scale,AMap.MapType';
         script.async = true;
-        script.onload = function() {
-            initAmapMap(key);
-        };
+        script.onload = function() { initAmapMap(key); };
         script.onerror = function() {
-            mapContainer.innerHTML = '<div style="padding:3rem;text-align:center;color:#ff6464;">高德地图加载失败，请检查网络或 API Key 是否正确。</div>';
+            mapContainer.innerHTML = '<div style="padding:3rem;text-align:center;color:#ff6464;">' +
+                '<h3>❌ 高德地图加载失败</h3>' +
+                '<p style="color:#ccc;margin-top:1rem;">可能原因：</p>' +
+                '<ul style="color:#aaa;text-align:left;max-width:400px;margin:1rem auto;line-height:2;">' +
+                '<li>1️⃣ API Key 的平台类型不是 <b>「Web端(JS API)」</b></li>' +
+                '<li>2️⃣ 安全域名未添加 <b>yexuejc.github.io</b></li>' +
+                '<li>3️⃣ 网络连接问题</li>' +
+                '</ul>' +
+                '<p style="color:#00ffff;margin-top:1rem;">👉 请到 <a href="https://lbs.amap.com/" target="_blank" style="color:#00ffff;">高德开放平台</a> → 控制台 → 应用管理 检查配置</p>' +
+                '</div>';
         };
         document.head.appendChild(script);
     }
@@ -810,13 +815,11 @@ function initVR() {
         try {
             amapInstance = new AMap.Map('mapContainer', {
                 viewMode: '3D',
-                zoom: 15,
+                zoom: 14,
                 center: amapDefaultCenter,
-                mapStyle: 'amap://styles/3b8e7f8c7b8f8b8e7f8c7b8f8b8e7f8', // 幻影黑
                 features: ['bg', 'road', 'building', 'point'],
                 showIndoorMap: false,
-                pitch: 45,
-                rotation: 0
+                pitch: 30
             });
             amapInstance.addControl(new AMap.ToolBar());
             amapInstance.addControl(new AMap.Scale());
