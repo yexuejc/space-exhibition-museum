@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <title>太空探索博物馆 - 360° 全景 VR 太阳系</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Three.js 核心库 -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.min.js"></script>
+    <!-- VR 控制器 -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.165.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.165.0/examples/js/renderers/CSS3DRenderer.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.165.0/examples/js/webxr/VRButton.js"></script>
+</head>
+<body>
+    <div id="particles-js"></div>
+    
+    <header>
+        <h1>🌌 太空探索博物馆</h1>
+        <p>探索宇宙的奥秘，感受星辰的呼吸</p>
+    </header>
+
+    <section class="hero">
+        <div class="hero-content">
+            <h2>踏入深度空间之旅</h2>
+            <p>从此时开始，你将亲临太空的壮美。<br>
+            <a href="#solarSystemVR" class="cta-btn vr-btn">进入 VR 太阳系</a>
+            <button id="enterVRBtn" class="vr-button">🎮 开启 VR 模式</button>
+            </p>
+        </div>
+    </section>
+
+    <section id="solarSystemVR" class="vrExhibit">
+        <h2>🌠 360° 全景 VR 太阳系</h2>
+        <div id="vrContainer"></div>
+        <div id="vrHint" class="vr-hint">
+            <p>🖐️ 单击进入 VR 模式 | 🌐 支持 Oculus Quest, HTC Vive 等设备</p>
+        </div>
+    </section>
+
+    <section class="timeline">
+        <h2>🚀 探索时间线</h2>
+        <ul class="timeline-list">
+            <li class="timeline-item">
+                <div class="timeline-dot"></div>
+                <div class="timeline-content">
+                    <h3>1957</h3>
+                    <p>苏联发射「斯普特尼克1号」，开启太空时代。</p>
+                </div>
+            </li>
+            <li class="timeline-item">
+                <div class="timeline-dot"></div>
+                <div class="timeline-content">
+                    <h3>1961</h3>
+                    <p>加加林首次进入太空。</p>
+                </div>
+            </li>
+            <li class="timeline-item">
+                <div class="timeline-dot"></div>
+                <div class="timeline-content">
+                    <h3>1969</h3>
+                    <p>阿姆斯特朗登月，首次月球行走。</p>
+                </div>
+            </li>
+            <li class="timeline-item">
+                <div class="timeline-dot"></div>
+                <div class="timeline-content">
+                    <h3>1981</h3>
+                    <p>哥伦比亚号航天飞机首飞。</p>
+                </div>
+            </li>
+            <li class="timeline-item">
+                <div class="timeline-dot"></div>
+                <div class="timeline-content">
+                    <h3>1998</h3>
+                    <p>国际空间站开始组装。</p>
+                </div>
+            </li>
+            <li class="timeline-item">
+                <div class="timeline-dot"></div>
+                <div class="timeline-content">
+                    <h3>2021</h3>
+                    <p>毅力号在火星着陆。</p>
+                </div>
+            </li>
+        </ul>
+    </section>
+
+    <footer>
+        <p>© 2026 太空探索博物馆 | 期待你来探索</p>
+    </footer>
+    
+    <!-- 粒子背景 -->
+    <script src="https://cdn.jsdelivr.net/npm/tsparticles@2.12.0/tsparticles.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
