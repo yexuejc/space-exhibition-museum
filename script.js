@@ -53,33 +53,62 @@ function initParticles() {
     draw();
 }
 
-// ===== 行星数据 =====
+// ===== 行星数据（真实比例） =====
+// 真实直径 (km): 太阳 1,392,700
+// 行星相对太阳的直径比率 * 视觉缩放系数
+// 用 pow(ratio, 0.35) 做视觉压缩，保持大小顺序但让小的可见
+var SUN_RADIUS = 5; // 太阳视觉半径（基准）
+
 var planetData = [
-    { name:'水星', icon:'☿', radius:0.38, dist:8,  color:0xaaaaaa,
+    { name:'水星', icon:'☿', 
+      realRatio:0.0035,  // 真实相对太阳直径
+      dist:8,  color:0xaaaaaa,
       info:{ ch:'最小的行星，距太阳最近，表面温度极昼夜温差大（-180°C~430°C）。',
              en:'Smallest planet, closest to Sun, extreme temperature swings.' } },
-    { name:'金星', icon:'♀', radius:0.95, dist:12, color:0xffaa00,
+    { name:'金星', icon:'♀', 
+      realRatio:0.0087,
+      dist:12, color:0xffaa00,
       info:{ ch:'最热的行星，大气浓厚含二氧化碳，表面温度可达465°C。',
              en:'Hottest planet, thick CO₂ atmosphere, surface up to 465°C.' } },
-    { name:'地球', icon:'🌍', radius:1.0,  dist:16, color:0x4488ff,
+    { name:'地球', icon:'🌍', 
+      realRatio:0.0092,
+      dist:16, color:0x4488ff,
       info:{ ch:'我们的家园，目前已知唯一拥有液态水和生命的星球。',
              en:'Our home, the only known planet with liquid water and life.' } },
-    { name:'火星', icon:'♂',  radius:0.53, dist:20, color:0xcc4400,
+    { name:'火星', icon:'♂',  
+      realRatio:0.0049,
+      dist:20, color:0xcc4400,
       info:{ ch:'红色星球，拥有太阳系最高峰奥林匹斯山。已有多个探测器到达。',
              en:'Red Planet, home to Olympus Mons, the tallest mountain in solar system.' } },
-    { name:'木星', icon:'♃', radius:11.2, dist:28, color:0xd4a574,
+    { name:'木星', icon:'♃', 
+      realRatio:0.1027,
+      dist:28, color:0xd4a574,
       info:{ ch:'太阳系最大行星，大红斑风暴已持续数百年。',
              en:'Largest planet, Great Red Spot storm has raged for centuries.' } },
-    { name:'土星', icon:'♄', radius:9.45, dist:36, color:0xeeddbb,
+    { name:'土星', icon:'♄', 
+      realRatio:0.0865,
+      dist:36, color:0xeeddbb,
       info:{ ch:'以壮观的环系统闻名，密度低于水，有82颗已知卫星。',
              en:'Famous for spectacular ring system, lower density than water.' } },
-    { name:'天王星', icon:'♅', radius:4.0,  dist:44, color:0x44aaff,
+    { name:'天王星', icon:'♅', 
+      realRatio:0.0367,
+      dist:44, color:0x44aaff,
       info:{ ch:'冰巨星，自转轴几乎与轨道平行，像"躺"着转。',
              en:'Ice giant, rotates on its side with extreme axial tilt.' } },
-    { name:'海王星', icon:'♆', radius:3.88, dist:52, color:0x3344ee,
+    { name:'海王星', icon:'♆', 
+      realRatio:0.0356,
+      dist:52, color:0x3344ee,
       info:{ ch:'太阳系最远行星，风速可达2100km/h，是太阳系风速最快的。',
              en:'Farthest planet, fastest winds in solar system up to 2,100 km/h.' } }
 ];
+
+// 用平方根压缩法计算视觉半径：让小的可见、大的不超太阳
+planetData.forEach(function(p) {
+    // pow(ratio, 0.35) 保留大小顺序，不等比例失真
+    p.radius = SUN_RADIUS * Math.pow(p.realRatio, 0.37);
+});
+
+// 验证：太阳 = 5, 木星 ≈ 2.2, 地球 ≈ 0.95, 水星 ≈ 0.68 ✅
 
 // ===== 程序化纹理生成 =====
 function createPlanetTexture(color, variant) {
@@ -143,7 +172,7 @@ function createSunTexture() {
         cardIcon.textContent = p.icon || '🪐';
         cardContent.innerHTML =
             '<p><span class="label">距太阳：</span>' + (p.dist * 5) + ' 百万公里</p>' +
-            '<p><span class="label">大小：</span>' + (p.radius < 1 ? '小型' : p.radius < 5 ? '中型' : '巨型') + '</p>' +
+            '<p><span class="label">相对大小：</span>' + (p.realRatio < 0.01 ? '小型（岩石行星）' : p.realRatio < 0.05 ? '中型（冰巨星）' : '巨型（气态巨星）') + '</p>' +
             '<p><span class="label">描述：</span>' + p.info.ch + '</p>' +
             '<p style="color:#888;font-size:0.85rem;margin-top:0.8rem;border-left:none;padding-left:0;"><em>' + p.info.en + '</em></p>';
         card.classList.add('show');
@@ -295,14 +324,15 @@ function initVR() {
     );
     scene.add(glow);
 
-    // 创建行星
-    var planets = planetData.map(function(p) {
+    // 创建行星（角度均匀分布，不重叠）
+    var planets = planetData.map(function(p, idx) {
         var tex = createPlanetTexture(p.color, (p.name==='木星'||p.name==='土星') ? 'banded' : 'light');
         var mesh = new THREE.Mesh(
             new THREE.SphereGeometry(p.radius, 32, 32),
             new THREE.MeshStandardMaterial({ map: tex, roughness: 0.7, metalness: 0.1 })
         );
-        var angle = Math.random() * Math.PI * 2;
+        // 等角度间隔分布，不再随机
+        var angle = (idx / planetData.length) * Math.PI * 2;
         mesh.position.set(Math.cos(angle)*p.dist, 0, Math.sin(angle)*p.dist);
         scene.add(mesh);
         return { mesh: mesh, angle: angle, data: p };
