@@ -87,17 +87,15 @@ planetData.forEach(function(p) {
 });
 
 // ===== 时间模拟引擎 =====
-// 基准：1 秒真实时间 = 1 小时模拟时间（地球公转可见速度）
-var SECONDS_PER_HOUR = 3600;
-var BASE_SPEED = 3600; // 1 real second = 1 simulated hour
+var BASE_SPEED = 3600; // 1 真实秒 = 1 模拟小时
 
-var simTime;      // 当前模拟时间（毫秒时间戳）
-var speedMultiplier = 1; // 速度倍率
+var simTime;
+var speedMultiplier = 1;
 var isPaused = false;
 var lastRealTime;
 
 function initTimeEngine() {
-    simTime = new Date().getTime(); // 从当前时间开始
+    simTime = new Date().getTime();
     lastRealTime = performance.now();
 }
 
@@ -107,10 +105,9 @@ function updateTime() {
         return;
     }
     var now = performance.now();
-    var realDelta = (now - lastRealTime) / 1000; // 秒
+    var realDelta = (now - lastRealTime) / 1000;
     lastRealTime = now;
-
-    var simDelta = realDelta * BASE_SPEED * speedMultiplier * 1000; // 毫秒
+    var simDelta = realDelta * BASE_SPEED * speedMultiplier * 1000;
     simTime += simDelta;
 }
 
@@ -118,22 +115,14 @@ function getSimDate() {
     return new Date(simTime);
 }
 
-// 计算行星当前角度（基于模拟时间）
+// 计算行星公转角度（基于模拟时间）
 function getPlanetAngle(p) {
-    // 从 J2000.0 到当前模拟时间的天数
     var j2000 = new Date('2000-01-01T12:00:00Z').getTime();
     var daysSinceJ2000 = (simTime - j2000) / 86400000;
-
-    // 平均运动：度/天
     var orbitalDays = p.orbitalPeriod * 365.25;
     var meanMotion = 360 / orbitalDays;
-
-    // 当前平黄经 = 初始平黄经 + 平均运动 × 天数
     var L = p.L0 + meanMotion * daysSinceJ2000;
-
-    // 转弧度，归一化到 0-2PI
-    var angle = (L % 360) / 180 * Math.PI;
-    return angle;
+    return (L % 360) / 180 * Math.PI;
 }
 
 // 计算行星自转角度
@@ -221,6 +210,79 @@ function createSunTexture() {
         if (e.key === 'Escape') window.hidePlanetCard && window.hidePlanetCard();
     });
 })();
+
+// ===== 相机聚焦动画 =====
+// 双击行星 → 聚焦追踪；双击空白 → 归位看太阳
+var focusedPlanet = null;  // 当前聚焦的行星对象（null=太阳）
+var focusAnim = null;      // 动画状态
+
+// 缓出三次函数
+function easeOutCubic(t) {
+    return 1 - Math.pow(1 - t, 3);
+}
+
+// 聚焦到指定行星
+function focusOnPlanet(p, mesh, camera, controls) {
+    window.hidePlanetCard && window.hidePlanetCard();
+
+    // 如果已经聚焦在这个行星上 → 再次双击就切回太阳
+    if (focusedPlanet === p) {
+        resetFocus(camera, controls);
+        return;
+    }
+
+    focusedPlanet = p;
+    controls.autoRotate = false; // 聚焦时关闭自动旋转
+
+    var targetPos = mesh.position.clone();
+    var dist = Math.max(10, p.dist * 1.8);
+    // 保持相机的相对方向但靠近
+    var dir = camera.position.clone().sub(controls.target).normalize();
+    var camPos = targetPos.clone().add(dir.multiplyScalar(dist));
+
+    focusAnim = {
+        startTarget: controls.target.clone(),
+        endTarget: targetPos,
+        startCam: camera.position.clone(),
+        endCam: camPos,
+        progress: 0
+    };
+}
+
+// 归位到太阳
+function resetFocus(camera, controls) {
+    focusedPlanet = null;
+    controls.autoRotate = true; // 恢复自动旋转
+
+    var targetPos = new THREE.Vector3(0, 0, 0);
+    var camPos = new THREE.Vector3(0, 30, 60);
+
+    focusAnim = {
+        startTarget: controls.target.clone(),
+        endTarget: targetPos,
+        startCam: camera.position.clone(),
+        endCam: camPos,
+        progress: 0
+    };
+}
+
+// ===== 焦点指示器（小光环显示当前聚焦目标）=====
+function createFocusRing(scene) {
+    var ring = new THREE.Mesh(
+        new THREE.RingGeometry(0.4, 0.6, 32),
+        new THREE.MeshBasicMaterial({
+            color: 0x00ffff,
+            side: THREE.DoubleSide,
+            transparent: true,
+            opacity: 0.8,
+            depthTest: false
+        })
+    );
+    ring.visible = false;
+    ring.position.set(0, 0.5, 0); // 在行星上方
+    scene.add(ring);
+    return ring;
+}
 
 // ===== VR/3D 场景 =====
 function initVR() {
@@ -337,6 +399,9 @@ function initVR() {
         scene.add(ring);
     });
 
+    // 聚焦光环
+    var focusRing = createFocusRing(scene);
+
     // VR 按钮
     try {
         var vrBtn = document.createElement('button');
@@ -366,29 +431,66 @@ function initVR() {
     // OrbitControls
     var controls = new THREE.OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
-    controls.dampingFactor = 0.05;
-    controls.minDistance = 10;
+    controls.dampingFactor = 0.08;
+    controls.minDistance = 8;
     controls.maxDistance = 180;
     controls.autoRotate = true;
     controls.autoRotateSpeed = 0.3;
     controls.target.set(0, 0, 0);
 
-    // 点击检测
+    // 射线检测
     var raycaster = new THREE.Raycaster();
     var mouse = new THREE.Vector2();
     var clickables = planets.map(function(p) { return p.mesh; });
 
+    // ===== 双击/单击检测 =====
+    var clickTimer = null;
+    var isDoubleClick = false;
+
     renderer.domElement.addEventListener('click', function(event) {
+        // 计算点击射线
         var rect = renderer.domElement.getBoundingClientRect();
         mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
         mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
         raycaster.setFromCamera(mouse, camera);
         var hits = raycaster.intersectObjects(clickables);
-        if (hits.length > 0) {
-            var hit = planets.find(function(p) { return p.mesh === hits[0].object; });
-            if (hit && window.showPlanetCard) window.showPlanetCard(hit.data);
+        var hitObj = hits.length > 0 ? hits[0].object : null;
+        var hitPlanet = hitObj ? planets.find(function(p) { return p.mesh === hitObj; }) : null;
+
+        if (clickTimer) {
+            // 第二次点击 → 双击
+            clearTimeout(clickTimer);
+            clickTimer = null;
+            isDoubleClick = true;
+
+            if (hitPlanet) {
+                // 双击行星 → 聚焦追踪
+                focusOnPlanet(hitPlanet.data, hitPlanet.mesh, camera, controls);
+            } else {
+                // 双击空白 → 归位看太阳
+                resetFocus(camera, controls);
+            }
         } else {
-            if (window.hidePlanetCard) window.hidePlanetCard();
+            isDoubleClick = false;
+            clickTimer = setTimeout(function() {
+                clickTimer = null;
+                // 只有非双击时才执行单击逻辑
+                if (!isDoubleClick) {
+                    if (hitPlanet) {
+                        window.showPlanetCard && window.showPlanetCard(hitPlanet.data);
+                    } else {
+                        window.hidePlanetCard && window.hidePlanetCard();
+                    }
+                }
+                isDoubleClick = false;
+            }, 280);
+        }
+    });
+
+    // ESC 也重置聚焦
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && focusedPlanet) {
+            resetFocus(camera, controls);
         }
     });
 
@@ -434,6 +536,38 @@ function initVR() {
         // 太阳自转
         sun.rotation.y += 0.001;
         glow.rotation.y += 0.0005;
+
+        // ===== 聚焦动画更新 =====
+        if (focusAnim) {
+            focusAnim.progress += 0.025;
+            if (focusAnim.progress >= 1) {
+                focusAnim.progress = 1;
+                focusAnim = null;
+            }
+            var t = easeOutCubic(focusAnim.progress);
+            controls.target.lerpVectors(focusAnim.startTarget, focusAnim.endTarget, t);
+            camera.position.lerpVectors(focusAnim.startCam, focusAnim.endCam, t);
+        }
+
+        // ===== 聚焦追踪（跟随行星运动）=====
+        if (focusedPlanet && !focusAnim) {
+            // 找到聚焦的行星
+            var fp = planets.find(function(p) { return p.data === focusedPlanet; });
+            if (fp) {
+                controls.target.copy(fp.mesh.position);
+                // 聚焦光环跟随
+                focusRing.position.copy(fp.mesh.position);
+                focusRing.position.y += fp.data.radius + 0.8;
+                focusRing.visible = true;
+                // 光环旋转
+                focusRing.rotation.x = -Math.PI / 2;
+                focusRing.rotation.z += 0.02;
+            } else {
+                focusRing.visible = false;
+            }
+        } else {
+            focusRing.visible = false;
+        }
 
         // 更新时间显示
         if (timeDisplay) {
