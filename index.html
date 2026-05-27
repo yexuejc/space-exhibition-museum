@@ -3,18 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
-    <title>太空探索博物馆 - 360° 全景 VR 太阳系</title>
+    <title>太空探索博物馆 - 360° VR 太阳系</title>
+    <meta name="description" content="沉浸式太空探索博物馆，3D太阳系展示，支持VR模式。探索八大行星，了解宇宙奥秘。">
+    <meta property="og:title" content="太空探索博物馆 - VR太阳系展览">
+    <meta property="og:description" content="沉浸式太空探索博物馆，3D太阳系展示，支持VR模式。">
+    <meta property="og:url" content="https://yexuejc.github.io/space-exhibition-museum/">
+    <meta property="og:type" content="website">
     <link rel="stylesheet" href="style.css">
-    <!-- Three.js 核心库 -->
+    <!-- Three.js -->
     <script src="https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.min.js"></script>
-    <!-- VR 控制器 -->
     <script src="https://cdn.jsdelivr.net/npm/three@0.165.0/examples/js/controls/OrbitControls.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.165.0/examples/js/renderers/CSS3DRenderer.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.165.0/examples/js/webxr/VRButton.js"></script>
 </head>
 <body>
     <div id="particles-js"></div>
-    
+
+    <!-- 行星信息卡片（隐藏） -->
+    <div id="planetCard" class="planet-card">
+        <button class="card-close" id="cardClose">✕</button>
+        <div class="planet-card-inner">
+            <div class="planet-icon" id="cardIcon">🪐</div>
+            <h2 id="cardTitle">行星名称</h2>
+            <div class="card-divider"></div>
+            <div id="cardContent" class="card-body"></div>
+        </div>
+    </div>
+
     <header>
         <h1>🌌 太空探索博物馆</h1>
         <p>探索宇宙的奥秘，感受星辰的呼吸</p>
@@ -23,23 +37,22 @@
     <section class="hero">
         <div class="hero-content">
             <h2>踏入深度空间之旅</h2>
-            <p>从此时开始，你将亲临太空的壮美。<br>
-            <a href="#solarSystemVR" class="cta-btn vr-btn">进入 VR 太阳系</a>
-            <button id="enterVRBtn" class="vr-button">🎮 开启 VR 模式</button>
-            </p>
+            <p>从此时开始，你将亲临太空的壮美。</p>
+            <a href="#solarSystemVR" class="cta-btn">🌠 查看太阳系三维模型</a>
         </div>
     </section>
 
     <section id="solarSystemVR" class="vrExhibit">
-        <h2>🌠 360° 全景 VR 太阳系</h2>
+        <h2>🌠 360° 全景太阳系</h2>
         <div id="vrContainer"></div>
-        <div id="vrHint" class="vr-hint">
-            <p>🖐️ 单击进入 VR 模式 | 🌐 支持 Oculus Quest, HTC Vive 等设备</p>
+        <div class="vr-controls">
+            <p class="vr-hint">🖱️ 拖拽旋转 · 滚轮缩放 · 点击行星查看详情</p>
+            <p class="vr-hint">🥽 支持 VR 头显设备（Oculus Quest / HTC Vive）</p>
         </div>
     </section>
 
     <section class="timeline">
-        <h2>🚀 探索时间线</h2>
+        <h2>🚀 太空探索时间线</h2>
         <ul class="timeline-list">
             <li class="timeline-item">
                 <div class="timeline-dot"></div>
@@ -52,45 +65,44 @@
                 <div class="timeline-dot"></div>
                 <div class="timeline-content">
                     <h3>1961</h3>
-                    <p>加加林首次进入太空。</p>
+                    <p>加加林首次进入太空，人类太空飞行第一人。</p>
                 </div>
             </li>
             <li class="timeline-item">
                 <div class="timeline-dot"></div>
                 <div class="timeline-content">
                     <h3>1969</h3>
-                    <p>阿姆斯特朗登月，首次月球行走。</p>
+                    <p>阿波罗11号登月，阿姆斯特朗首次月球行走。</p>
                 </div>
             </li>
             <li class="timeline-item">
                 <div class="timeline-dot"></div>
                 <div class="timeline-content">
                     <h3>1981</h3>
-                    <p>哥伦比亚号航天飞机首飞。</p>
+                    <p>哥伦比亚号航天飞机首飞，可重复使用航天器。</p>
                 </div>
             </li>
             <li class="timeline-item">
                 <div class="timeline-dot"></div>
                 <div class="timeline-content">
                     <h3>1998</h3>
-                    <p>国际空间站开始组装。</p>
+                    <p>国际空间站开始组装，多国合作太空实验室。</p>
                 </div>
             </li>
             <li class="timeline-item">
                 <div class="timeline-dot"></div>
                 <div class="timeline-content">
                     <h3>2021</h3>
-                    <p>毅力号在火星着陆。</p>
+                    <p>毅力号火星车着陆火星，探寻生命痕迹。</p>
                 </div>
             </li>
         </ul>
     </section>
 
     <footer>
-        <p>© 2026 太空探索博物馆 | 期待你来探索</p>
+        <p>© 2026 太空探索博物馆 | 由 <a href="https://github.com/yexuejc">@yexuejc</a> 打造 🚀</p>
     </footer>
-    
-    <!-- 粒子背景 -->
+
     <script src="https://cdn.jsdelivr.net/npm/tsparticles@2.12.0/tsparticles.min.js"></script>
     <script src="script.js"></script>
 </body>

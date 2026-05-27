@@ -53,31 +53,20 @@ header p { font-size: 1.2rem; opacity: 0.8; }
     font-size: 1.4rem;
     margin-bottom: 2rem;
     opacity: 0.9;
-    max-width: 800px;
-    margin-left: auto;
-    margin-right: auto;
 }
-.cta-btn, .vr-button {
+.cta-btn {
     display: inline-block;
     padding: 1rem 2.5rem;
+    background: linear-gradient(45deg, #00ffff, #0077ff);
+    color: #000;
     font-weight: bold;
     border-radius: 50px;
     text-decoration: none;
-    cursor: pointer;
-    border: none;
-    transition: transform 0.3s, box-shadow 0.3s;
-}
-.cta-btn {
-    background: linear-gradient(45deg, #00ffff, #0077ff);
-    color: #000;
     box-shadow: 0 0 20px rgba(0,255,255,0.6);
+    transition: transform 0.3s, box-shadow 0.3s;
+    font-size: 1.1rem;
 }
-.vr-button {
-    background: linear-gradient(45deg, #ff0088, #8000ff);
-    color: #fff;
-    box-shadow: 0 0 20px rgba(255,0,136,0.6);
-}
-.cta-btn:hover, .vr-button:hover {
+.cta-btn:hover {
     transform: scale(1.05);
     box-shadow: 0 0 30px rgba(0,255,255,0.8);
 }
@@ -102,11 +91,84 @@ header p { font-size: 1.2rem; opacity: 0.8; }
     overflow: hidden;
     box-shadow: 0 0 30px rgba(0,255,255,0.4);
 }
+.vr-controls { margin-top: 1rem; }
 .vr-hint {
-    margin-top: 1rem;
     font-size: 0.9rem;
     opacity: 0.7;
+    margin: 0.3rem 0;
 }
+
+/* ===== 行星信息卡片 ===== */
+.planet-card {
+    position: fixed;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 360px;
+    padding: 2rem;
+    background: rgba(10, 10, 30, 0.92);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(0,255,255,0.3);
+    border-radius: 20px;
+    color: #fff;
+    box-shadow: 0 0 40px rgba(0,255,255,0.4), 0 0 80px rgba(0,0,0,0.8);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.4s ease, transform 0.4s ease;
+    z-index: 9999;
+    pointer-events: none;
+}
+.planet-card.show {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translate(-50%, -50%) scale(1);
+}
+.planet-card-inner { text-align: center; }
+.planet-icon {
+    font-size: 3.5rem;
+    margin-bottom: 0.5rem;
+}
+.planet-card h2 {
+    font-size: 1.8rem;
+    margin-bottom: 0.5rem;
+    color: #00ffff;
+    text-shadow: 0 0 10px rgba(0,255,255,0.5);
+}
+.card-divider {
+    width: 60px;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, #00ffff, transparent);
+    margin: 0 auto 1.5rem auto;
+}
+.card-body {
+    text-align: left;
+    line-height: 1.8;
+    font-size: 1rem;
+    color: #ccc;
+}
+.card-body p {
+    margin-bottom: 0.6rem;
+    padding-left: 0.5rem;
+    border-left: 2px solid rgba(0,255,255,0.3);
+    padding-left: 0.8rem;
+}
+.card-body .label {
+    color: #00ffff;
+    font-weight: bold;
+}
+.card-close {
+    position: absolute;
+    top: 0.8rem;
+    right: 1.2rem;
+    background: transparent;
+    border: none;
+    color: #00ffff;
+    font-size: 1.5rem;
+    cursor: pointer;
+    opacity: 0.7;
+    transition: opacity 0.3s;
+}
+.card-close:hover { opacity: 1; }
 
 /* Timeline */
 .timeline {
@@ -157,10 +219,14 @@ header p { font-size: 1.2rem; opacity: 0.8; }
     border-left: 4px solid #00ffff;
     box-shadow: 0 0 15px rgba(0,255,255,0.3);
 }
-.timeline-item:nth-child(odd) .timeline-content { margin-right: auto; }
-.timeline-item:nth-child(even) .timeline-content { margin-left: auto; }
-.timeline-content h3 { margin-bottom: 0.5rem; color: #00ffff; }
-.timeline-content p { color: #ccc; }
+.timeline-item:nth-child(odd) .timeline-content { margin-right: 30px; }
+.timeline-item:nth-child(even) .timeline-content { margin-left: 30px; }
+.timeline-content h3 {
+    margin-bottom: 0.5rem;
+    color: #00ffff;
+    font-size: 1.3rem;
+}
+.timeline-content p { color: #bbb; line-height: 1.5; }
 
 /* Footer */
 footer {
@@ -168,14 +234,20 @@ footer {
     padding: 2rem 1rem;
     background: rgba(0,0,0,0.6);
 }
+footer a { color: #00ffff; text-decoration: none; }
+footer a:hover { text-decoration: underline; }
 
 /* Responsive */
 @media (max-width: 768px) {
-    .hero-content h2 { font-size: 2.5rem; }
-    .hero-content p { font-size: 1.2rem; }
-    .vrExhibit h2 { font-size: 2rem; }
+    header h1 { font-size: 2rem; }
+    .hero-content h2 { font-size: 2.2rem; }
+    .hero-content p { font-size: 1rem; }
+    .vrExhibit h2 { font-size: 1.8rem; }
     #vrContainer { height: 400px; }
-    .timeline-item { width: 100%; padding-left: 30px !important; }
-    .timeline-item:nth-child(even) { left: 0; }
-    .timeline-dot { left: 10px; }
+    .planet-card { width: 85%; padding: 1.5rem; }
+    .timeline-item { width: 100%; left: 0 !important; padding-left: 30px; }
+    .timeline-dot { left: 10px !important; }
+    .timeline-item:nth-child(odd) .timeline-content,
+    .timeline-item:nth-child(even) .timeline-content { margin: 0; }
+    .timeline-list::before { left: 10px; }
 }
