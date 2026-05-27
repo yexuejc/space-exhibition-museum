@@ -650,9 +650,38 @@ function initVR() {
     // OrbitControls
     var controls = new THREE.OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true; controls.dampingFactor = 0.08;
-    controls.minDistance = 6; controls.maxDistance = 180;
+    controls.minDistance = 0.05; controls.maxDistance = 200;
+    controls.zoomSpeed = 1.2;
     controls.autoRotate = true; controls.autoRotateSpeed = 0.3;
     controls.target.set(0, 0, 0);
+
+    // ===== 缩放滑块（左侧竖排）=====
+    var ZOOM_MIN = 0.05; // 极限靠近，可穿越行星表面
+    var ZOOM_MAX = 180;
+    var zoomSliderEl = document.getElementById('zoomSlider');
+    var zoomLabelEl = document.getElementById('zoomLabel');
+    var targetZoomDist = null; // 目标相机距离
+    var zoomFromSlider = false; // 防止循环更新
+
+    function sliderToZoom(val) {
+        var t = val / 1000;
+        return ZOOM_MAX * Math.pow(ZOOM_MIN / ZOOM_MAX, t);
+    }
+
+    function zoomToSlider(dist) {
+        var clamped = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, dist));
+        var t = (Math.log(clamped) - Math.log(ZOOM_MAX)) / (Math.log(ZOOM_MIN) - Math.log(ZOOM_MAX));
+        return Math.round(t * 1000);
+    }
+
+    if (zoomSliderEl) {
+        zoomSliderEl.addEventListener('input', function() {
+            var dist = sliderToZoom(parseFloat(this.value));
+            targetZoomDist = dist;
+            zoomFromSlider = true;
+            zoomLabelEl.textContent = Math.round((1 - parseFloat(this.value)/1000) * 100) + '%';
+        });
+    }
 
     // 射线检测
     var raycaster = new THREE.Raycaster();
@@ -715,6 +744,114 @@ function initVR() {
         });
     }
 
+    // ===== 地图模式 =====
+    var mapOverlay = document.getElementById('mapOverlay');
+    var mapContainer = document.getElementById('mapContainer');
+    var enterMapBtn = document.getElementById('enterMapBtn');
+    var exitMapBtn = document.getElementById('exitMapBtn');
+    var mapSetupPrompt = document.getElementById('mapSetupPrompt');
+    var amapKeyInput = document.getElementById('amapKeyInput');
+    var amapKeySubmit = document.getElementById('amapKeySubmit');
+    var amapInstance = null;
+    var amapKey = localStorage.getItem('amap_key') || '';
+
+    function canEnterMapMode() {
+        // 聚焦在地球上且非常靠近
+        if (!focusedPlanet || focusedPlanet.name !== '地球') return false;
+        var dist = camera.position.distanceTo(controls.target);
+        return dist < 2.5;
+    }
+
+    function updateEnterMapButton() {
+        if (!enterMapBtn) return;
+        if (canEnterMapMode()) {
+            enterMapBtn.classList.add('ready');
+            enterMapBtn.title = '进入地球地图模式';
+        } else {
+            enterMapBtn.classList.remove('ready');
+            enterMapBtn.title = '🎯 聚焦地球并拉近视角以启用';
+        }
+    }
+
+    function openMapMode() {
+        if (!mapOverlay) return;
+        mapOverlay.classList.add('active');
+        if (amapKey) {
+            mapSetupPrompt.style.display = 'none';
+            loadAmap(amapKey);
+        } else {
+            mapSetupPrompt.style.display = 'flex';
+        }
+    }
+
+    function loadAmap(key) {
+        if (amapInstance) { amapInstance.destroy(); amapInstance = null; }
+        mapContainer.innerHTML = '';
+        // 检查 AMap 是否已加载
+        if (typeof AMap !== 'undefined') {
+            initAmapMap(key);
+            return;
+        }
+        // 动态加载 AMap JS API
+        var script = document.createElement('script');
+        script.src = 'https://webapi.amap.com/maps?v=2.0&key=' + key;
+        script.async = true;
+        script.onload = function() {
+            initAmapMap(key);
+        };
+        script.onerror = function() {
+            mapContainer.innerHTML = '<div style="padding:3rem;text-align:center;color:#ff6464;">高德地图加载失败，请检查网络或 API Key 是否正确。</div>';
+        };
+        document.head.appendChild(script);
+    }
+
+    function initAmapMap(key) {
+        try {
+            amapInstance = new AMap.Map('mapContainer', {
+                viewMode: '3D',
+                zoom: 14,
+                center: [116.397428, 39.90923], // 天安门
+                mapStyle: 'amap://styles/light',
+                features: ['bg', 'road', 'building', 'point']
+            });
+            amapInstance.addControl(new AMap.ToolBar());
+            amapInstance.addControl(new AMap.Scale());
+        } catch(e) {
+            mapContainer.innerHTML = '<div style="padding:3rem;text-align:center;color:#ff6464;">地图初始化失败: ' + e.message + '</div>';
+        }
+    }
+
+    if (enterMapBtn) {
+        enterMapBtn.addEventListener('click', openMapMode);
+    }
+    if (exitMapBtn) {
+        exitMapBtn.addEventListener('click', function() {
+            mapOverlay.classList.remove('active');
+        });
+    }
+    if (amapKeySubmit) {
+        if (amapKeyInput && amapKey) amapKeyInput.value = amapKey;
+        amapKeySubmit.addEventListener('click', function() {
+            var key = amapKeyInput.value.trim();
+            if (key) {
+                amapKey = key;
+                localStorage.setItem('amap_key', key);
+                mapSetupPrompt.style.display = 'none';
+                loadAmap(key);
+            } else {
+                alert('请输入有效的高德地图 API Key');
+            }
+        });
+        amapKeyInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') amapKeySubmit.click();
+        });
+    }
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && mapOverlay && mapOverlay.classList.contains('active')) {
+            mapOverlay.classList.remove('active');
+        }
+    });
+
     // ===== 主循环 =====
     function animate() {
         requestAnimationFrame(animate);
@@ -745,6 +882,28 @@ function initVR() {
             controls.target.lerpVectors(focusAnim.startTarget, focusAnim.endTarget, t);
             camera.position.lerpVectors(focusAnim.startCam, focusAnim.endCam, t);
         }
+
+        // ===== 缩放滑块控制 =====
+        var currentDist = camera.position.distanceTo(controls.target);
+        if (targetZoomDist !== null) {
+            // 平滑逼近目标距离
+            var newDist = currentDist + (targetZoomDist - currentDist) * 0.12;
+            if (Math.abs(newDist - targetZoomDist) < 0.01) newDist = targetZoomDist;
+            // 调整相机位置到目标距离
+            var dir = camera.position.clone().sub(controls.target).normalize();
+            camera.position.copy(controls.target).add(dir.multiplyScalar(newDist));
+            if (Math.abs(newDist - targetZoomDist) < 0.01) targetZoomDist = null;
+        }
+        // 滚轮缩放时更新滑块
+        if (zoomSliderEl && !zoomFromSlider) {
+            var sv = zoomToSlider(currentDist);
+            zoomSliderEl.value = sv;
+            if (zoomLabelEl) zoomLabelEl.textContent = Math.round((1 - sv/1000) * 100) + '%';
+        }
+        zoomFromSlider = false;
+
+        // 进入地图按钮状态
+        updateEnterMapButton();
 
         // 聚焦追踪
         if (focusedPlanet && !focusAnim) {

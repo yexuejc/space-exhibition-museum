@@ -437,6 +437,209 @@ footer {
 footer a { color: #00ffff; text-decoration: none; }
 footer a:hover { text-decoration: underline; }
 
+/* ===== 缩放滑块（左侧竖排）===== */
+.zoom-panel {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 80;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(0,255,255,0.2);
+    border-radius: 30px;
+    padding: 14px 8px;
+    transition: opacity 0.3s;
+}
+.zoom-panel:hover { border-color: rgba(0,255,255,0.4); }
+.zoom-icon { font-size: 1rem; opacity: 0.7; margin-bottom: 2px; }
+.zoom-slider {
+    -webkit-appearance: slider-vertical;
+    appearance: slider-vertical;
+    writing-mode: vertical-lr;
+    direction: rtl;
+    width: 180px;
+    height: 8px;
+    cursor: pointer;
+    background: linear-gradient(to top, #333, #00ffff);
+    border-radius: 4px;
+    outline: none;
+    margin: 4px 0;
+}
+.zoom-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: #00ffff;
+    cursor: pointer;
+    box-shadow: 0 0 10px rgba(0,255,255,0.5);
+}
+.zoom-slider::-moz-range-thumb {
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: #00ffff;
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 0 10px rgba(0,255,255,0.5);
+}
+.zoom-label {
+    font-size: 0.65rem;
+    color: #00ffff;
+    font-family: 'Consolas', monospace;
+    margin-top: 2px;
+    opacity: 0.8;
+}
+#vrContainer.is-fullscreen .zoom-panel {
+    left: 20px;
+}
+
+/* ===== 进入地图按钮 ===== */
+.enter-map-btn {
+    position: absolute;
+    top: 12px;
+    right: 116px;
+    z-index: 100;
+    width: 44px;
+    height: 44px;
+    border: 2px solid rgba(0,255,255,0.6);
+    border-radius: 12px;
+    background: rgba(0,0,0,0.5);
+    backdrop-filter: blur(8px);
+    color: #00ffff;
+    font-size: 1.1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+    opacity: 0.4;
+    pointer-events: none;
+}
+.enter-map-btn.ready {
+    opacity: 1;
+    pointer-events: auto;
+}
+.enter-map-btn:hover {
+    opacity: 1;
+    background: rgba(0,255,255,0.2);
+    border-color: #00ffff;
+    box-shadow: 0 0 15px rgba(0,255,255,0.4);
+}
+#vrContainer.is-fullscreen .enter-map-btn {
+    top: 20px;
+    right: 128px;
+}
+
+/* ===== 地图模式覆盖层 ===== */
+.map-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 20000;
+    background: #000;
+    display: none;
+    flex-direction: column;
+}
+.map-overlay.active {
+    display: flex;
+}
+.map-toolbar {
+    display: flex;
+    align-items: center;
+    padding: 10px 16px;
+    background: rgba(0,0,0,0.9);
+    border-bottom: 1px solid rgba(0,255,255,0.2);
+    gap: 16px;
+    z-index: 1;
+}
+.map-exit-btn {
+    padding: 8px 20px;
+    background: linear-gradient(45deg, #00ffff, #0077ff);
+    color: #000;
+    font-weight: bold;
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    transition: transform 0.2s;
+}
+.map-exit-btn:hover { transform: scale(1.05); }
+.map-title {
+    font-size: 1rem;
+    color: #00ffff;
+    font-weight: bold;
+}
+.map-container {
+    flex: 1;
+    width: 100%;
+    min-height: 0;
+}
+/* 地图配置提示 */
+.map-setup-prompt {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,0.85);
+    z-index: 2;
+}
+.map-prompt-box {
+    background: rgba(10,10,40,0.95);
+    border: 1px solid rgba(0,255,255,0.3);
+    border-radius: 20px;
+    padding: 2.5rem;
+    max-width: 500px;
+    width: 90%;
+    text-align: center;
+}
+.map-prompt-box h3 {
+    font-size: 1.5rem;
+    color: #00ffff;
+    margin-bottom: 1rem;
+}
+.map-prompt-box p {
+    color: #ccc;
+    margin-bottom: 1.2rem;
+    line-height: 1.6;
+}
+.map-key-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 1rem;
+}
+.map-key-input {
+    flex: 1;
+    padding: 10px 14px;
+    border: 1px solid rgba(0,255,255,0.3);
+    border-radius: 10px;
+    background: rgba(0,0,0,0.5);
+    color: #fff;
+    font-size: 0.9rem;
+    outline: none;
+}
+.map-key-input:focus {
+    border-color: #00ffff;
+    box-shadow: 0 0 10px rgba(0,255,255,0.3);
+}
+.map-key-btn {
+    padding: 10px 20px;
+    background: linear-gradient(45deg, #00ffff, #0077ff);
+    color: #000;
+    font-weight: bold;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+}
+.map-key-hint {
+    font-size: 0.8rem;
+    color: #888 !important;
+}
+.map-key-hint a { color: #00ffff; }
+
 /* Responsive */
 @media (max-width: 768px) {
     header h1 { font-size: 2rem; }
@@ -452,4 +655,10 @@ footer a:hover { text-decoration: underline; }
     .timeline-item:nth-child(odd) .timeline-content,
     .timeline-item:nth-child(even) .timeline-content { margin: 0; }
     .timeline-list::before { left: 10px; }
+    .zoom-panel { padding: 10px 6px; }
+    .zoom-slider { width: 120px; }
+    .enter-map-btn { right: 100px; width: 36px; height: 36px; font-size: 0.9rem; }
+    #vrContainer.is-fullscreen .enter-map-btn { right: 112px; }
+    .map-prompt-box { padding: 1.5rem; }
+    .map-key-row { flex-direction: column; }
 }
