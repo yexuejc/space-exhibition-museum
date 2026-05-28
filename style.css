@@ -223,6 +223,25 @@ body.has-fullscreen .vr-controls {
     background: rgba(0,255,255,0.2);
     box-shadow: 0 0 20px rgba(0,255,255,0.3);
 }
+/* 矮行星标签 */
+.planet-label.dwarf-label .label-sub {
+    color: #ccbbaa;
+    font-size: 9px;
+    opacity: 0.9;
+    margin-left: 6px;
+    background: rgba(200,180,160,0.15);
+    padding: 1px 6px;
+    border-radius: 6px;
+    border: 1px solid rgba(200,180,160,0.2);
+}
+/* 彗星标签 */
+.planet-label.comet-label {
+    border-color: rgba(100,180,255,0.3);
+    background: rgba(30,60,120,0.5);
+}
+.planet-label.comet-label .label-icon {
+    filter: drop-shadow(0 0 4px rgba(100,180,255,0.6));
+}
 
 /* ===== 时间控制面板 ===== */
 .time-panel {

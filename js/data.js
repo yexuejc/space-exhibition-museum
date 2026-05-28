@@ -185,6 +185,34 @@ var planetData = [
             discoverer:'约翰·伽勒/勒维耶',
             discoverYear:'1846'
         }
+    },
+    // ===== 矮行星 =====
+    {
+        name:'冥王星', icon:'♇', realRatio:0.00218, dist:62, color:0xccbbaa,
+        orbitalPeriod:247.94, rotationPeriod:-6.387,
+        L0:163.0, texType:'pluto',
+        isDwarf:true, // 矮行星标记
+        // 轨道倾角（度），用于非平面轨道
+        orbitalInclination: 17.16,
+        // 轨道偏心率（视觉椭圆效果）
+        orbitalEccentricity: 0.25,
+        info:{ ch:'矮行星，曾经的第九大行星，冰质表面有标志性心形区域。',
+               en:'Dwarf planet, formerly the 9th planet, with iconic heart-shaped region.' },
+        sci:{
+            diameter:'2,377 km',
+            mass:'1.303×10²² kg',
+            gravity:'0.62 m/s²',
+            density:'1.86 g/cm³',
+            temp:'-230°C',
+            atmosphere:'N₂, CH₄, CO（稀薄）',
+            moons:5,
+            auDist:39.48,
+            dayLength:'6.39 天',
+            yearLength:'247.9 年',
+            axialTilt:'122.53°',
+            discoverer:'克莱德·汤博',
+            discoverYear:'1930'
+        }
     }
 ];
 
@@ -192,3 +220,40 @@ var planetData = [
 planetData.forEach(function(p) {
     p.radius = SUN_RADIUS * Math.pow(p.realRatio, 0.37);
 });
+
+// ===== 彗星轨道参数 =====
+// 高度椭圆轨道，近日点靠近太阳，远日点远出海王星
+var cometData = {
+    name:'哈雷彗星', icon:'☄️', color:0xccddff,
+    // 轨道根数（视觉压缩空间）
+    perihelionDist: 8,   // 近日点距离
+    aphelionDist: 65,    // 远日点距离
+    orbitalInclination: 30, // 轨道倾角（度）
+    // 近日点经度（初始角度，度）
+    argOfPerihelion: 45,
+    // 公转周期（模拟年份）
+    orbitalPeriod: 75,
+    // 自转周期（小时，彗核缓慢旋转）
+    rotationPeriod: 24,
+    // 彗核半径
+    radius: 0.6,
+    info:{
+        ch:'著名的周期性彗星，每75年回归一次。接近太阳时冰质升华形成壮观的离子尾和尘埃尾。',
+        en:'Famous periodic comet, returns every ~75 years. Ice sublimates near the Sun forming spectacular ion and dust tails.'
+    },
+    sci:{
+        diameter:'~15 km（彗核）',
+        mass:'~2.2×10¹⁴ kg',
+        gravity:'极低',
+        density:'~0.6 g/cm³',
+        temp:'近日点 ~100°C / 远日点 -250°C',
+        atmosphere:'升华的气体（H₂O, CO, CO₂, CH₄）',
+        moons:0,
+        auDist:'0.6 ~ 35 AU',
+        dayLength:'~24 小时',
+        yearLength:'~75 年',
+        axialTilt:'未知',
+        discoverer:'古代观测记录，哈雷确定轨道',
+        discoverYear:'1705（哈雷）'
+    }
+};

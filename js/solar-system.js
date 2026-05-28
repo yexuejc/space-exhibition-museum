@@ -509,6 +509,175 @@ function buildSolarSystem() {
         });
     });
 
+    // ===== 矮行星：冥王星 =====
+    // 查找冥王星数据
+    var plutoData = null;
+    planetData.forEach(function(p) { if (p.name === '冥王星') plutoData = p; });
+    if (plutoData) {
+        var plutoTex = getPlanetTexture(plutoData);
+        var plutoMesh = new THREE.Mesh(
+            new THREE.SphereGeometry(plutoData.radius, 32, 32),
+            new THREE.MeshStandardMaterial({ map: plutoTex, roughness: 0.8, metalness: 0.02 })
+        );
+        // 初始位置（使用倾斜轨道计算）
+        var pAngle = getPlanetAngle(plutoData);
+        var pIncline = (plutoData.orbitalInclination || 0) * Math.PI / 180;
+        var pDist = plutoData.dist;
+        plutoMesh.position.set(
+            Math.cos(pAngle) * pDist,
+            Math.sin(pAngle) * pDist * Math.sin(pIncline),
+            Math.sin(pAngle) * pDist * Math.cos(pIncline)
+        );
+        plutoMesh.rotation.y = getPlanetRotation(plutoData);
+        plutoMesh.userData = plutoData;
+        scene.add(plutoMesh);
+        clickables.push(plutoMesh);
+
+        // 保存冥王星引用
+        SPACEDEMO.pluto = { mesh: plutoMesh, data: plutoData };
+
+        // CSS2D 标签（矮行星专用样式）
+        if (labelRenderer && typeof THREE.CSS2DObject !== 'undefined') {
+            var div = document.createElement('div');
+            div.className = 'planet-label dwarf-label';
+            div.innerHTML = '<span class="label-icon">♇</span>冥王星<span class="label-sub">矮行星</span>';
+            var label = new THREE.CSS2DObject(div);
+            label.position.set(0, plutoData.radius + 1.0, 0);
+            plutoMesh.add(label);
+            labelObjects.push({ label: label, data: plutoData, div: div });
+        }
+
+        // 冥王星的轨道线（倾斜椭圆）
+        var orbSegs = 64;
+        var orbPts = [];
+        for (var i = 0; i <= orbSegs; i++) {
+            var theta = (i / orbSegs) * Math.PI * 2;
+            var incl = (plutoData.orbitalInclination || 0) * Math.PI / 180;
+            var ecc = plutoData.orbitalEccentricity || 0;
+            // 椭圆形状
+            var r = pDist * (1 - ecc * ecc) / (1 + ecc * Math.cos(theta));
+            orbPts.push(new THREE.Vector3(
+                Math.cos(theta) * r,
+                Math.sin(theta) * r * Math.sin(incl),
+                Math.sin(theta) * r * Math.cos(incl)
+            ));
+        }
+        var orbGeom = new THREE.BufferGeometry().setFromPoints(orbPts);
+        var orbMat = new THREE.LineBasicMaterial({
+            color: 0x887766, transparent: true, opacity: 0.15
+        });
+        scene.add(new THREE.Line(orbGeom, orbMat));
+    }
+
+    // ===== 彗星 =====
+    if (typeof cometData !== 'undefined') {
+        // 彗核（不规则冰质小球）
+        var cometGeom = new THREE.SphereGeometry(cometData.radius, 16, 16);
+        // 轻微随机变形模拟不规则彗核
+        var posAttr = cometGeom.attributes.position;
+        for (var i = 0; i < posAttr.count; i++) {
+            var x = posAttr.getX(i), y = posAttr.getY(i), z = posAttr.getZ(i);
+            var scale = 1 + (Math.random() - 0.5) * 0.3;
+            posAttr.setXYZ(i, x * scale, y * scale, z * scale);
+        }
+        posAttr.needsUpdate = true;
+        cometGeom.computeVertexNormals();
+        var cometMat = new THREE.MeshStandardMaterial({
+            color: 0xccddff, roughness: 0.6, metalness: 0.05, emissive: 0x4466aa, emissiveIntensity: 0.1
+        });
+        var cometMesh = new THREE.Mesh(cometGeom, cometMat);
+        // 初始位置：近日点附近
+        var initAngle = Math.random() * Math.PI * 2;
+        cometMesh.userData = cometData;
+        scene.add(cometMesh);
+        clickables.push(cometMesh);
+
+        // 彗星尾粒子系统
+        var TAIL_COUNT = 120;
+        var tailPositions = new Float32Array(TAIL_COUNT * 3);
+        var tailGeom = new THREE.BufferGeometry();
+        tailGeom.setAttribute('position', new THREE.BufferAttribute(tailPositions, 3));
+
+        // 为每个粒子预生成随机偏移（固定，避免每帧闪烁）
+        var tailSeedAngles = new Float32Array(TAIL_COUNT);
+        var tailSeedOffsets = new Float32Array(TAIL_COUNT * 2);
+        for (var i = 0; i < TAIL_COUNT; i++) {
+            tailSeedAngles[i] = Math.random() * Math.PI * 2;
+            tailSeedOffsets[i*2] = Math.random();
+            tailSeedOffsets[i*2+1] = Math.random();
+        }
+
+        // 粒子圆形渐变纹理
+        var canvas = document.createElement('canvas');
+        canvas.width = 64; canvas.height = 64;
+        var ctx = canvas.getContext('2d');
+        var grad = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+        grad.addColorStop(0, 'rgba(255,255,255,1)');
+        grad.addColorStop(0.2, 'rgba(200,230,255,0.8)');
+        grad.addColorStop(0.5, 'rgba(150,200,255,0.3)');
+        grad.addColorStop(1, 'rgba(100,150,255,0)');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, 64, 64);
+        var dotTexture = new THREE.CanvasTexture(canvas);
+
+        var tailMat = new THREE.PointsMaterial({
+            size: 1.5,
+            map: dotTexture,
+            transparent: true,
+            blending: THREE.AdditiveBlending,
+            depthWrite: false,
+            color: 0x88ccff,
+            opacity: 0.6
+        });
+        var tailPoints = new THREE.Points(tailGeom, tailMat);
+        scene.add(tailPoints);
+
+        // 保存彗星引用
+        SPACEDEMO.comet = {
+            mesh: cometMesh,
+            data: cometData,
+            tailPoints: tailPoints,
+            tailGeom: tailGeom,
+            tailMat: tailMat,
+            tailCount: TAIL_COUNT,
+            tailSeedAngles: tailSeedAngles,
+            tailSeedOffsets: tailSeedOffsets,
+            angle: initAngle
+        };
+
+        // 彗星的轨道线（高偏心椭圆 + 倾斜）
+        var orbSegs = 72;
+        var orbPts = [];
+        for (var i = 0; i <= orbSegs; i++) {
+            var theta = (i / orbSegs) * Math.PI * 2;
+            var incl = (cometData.orbitalInclination || 0) * Math.PI / 180;
+            var a = (cometData.perihelionDist + cometData.aphelionDist) / 2;
+            var ecc = (cometData.aphelionDist - cometData.perihelionDist) / (cometData.perihelionDist + cometData.aphelionDist);
+            var r = a * (1 - ecc * ecc) / (1 + ecc * Math.cos(theta));
+            orbPts.push(new THREE.Vector3(
+                Math.cos(theta) * r,
+                Math.sin(theta) * r * Math.sin(incl),
+                Math.sin(theta) * r * Math.cos(incl)
+            ));
+        }
+        var orbGeom = new THREE.BufferGeometry().setFromPoints(orbPts);
+        var orbMat = new THREE.LineBasicMaterial({
+            color: 0x4477aa, transparent: true, opacity: 0.1
+        });
+        scene.add(new THREE.Line(orbGeom, orbMat));
+
+        // 彗星CSS2D标签
+        if (labelRenderer && typeof THREE.CSS2DObject !== 'undefined') {
+            var div = document.createElement('div');
+            div.className = 'planet-label comet-label';
+            div.innerHTML = '<span class="label-icon">☄️</span>哈雷彗星';
+            var label = new THREE.CSS2DObject(div);
+            label.position.set(0, cometData.radius + 1.0, 0);
+            cometMesh.add(label);
+            labelObjects.push({ label: label, data: cometData, div: div });
+        }
+    }
+
     // ===== 聚焦环（已移除，改用标签高亮代替）=====
 
     // 标签可见状态

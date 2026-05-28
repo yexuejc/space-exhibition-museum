@@ -73,6 +73,89 @@ function initVR() {
             }
         });
 
+        // 更新冥王星位置（倾斜轨道）
+        if (SPACEDEMO.pluto) {
+            var pAngle = getPlanetAngle(SPACEDEMO.pluto.data);
+            var pIncline = (SPACEDEMO.pluto.data.orbitalInclination || 0) * Math.PI / 180;
+            var pDist = SPACEDEMO.pluto.data.dist;
+            SPACEDEMO.pluto.mesh.position.set(
+                Math.cos(pAngle) * pDist,
+                Math.sin(pAngle) * pDist * Math.sin(pIncline),
+                Math.sin(pAngle) * pDist * Math.cos(pIncline)
+            );
+            SPACEDEMO.pluto.mesh.rotation.y = getPlanetRotation(SPACEDEMO.pluto.data);
+        }
+
+        // ===== 彗星轨道更新 =====
+        if (SPACEDEMO.comet) {
+            var c = SPACEDEMO.comet;
+            // 沿椭圆轨道推进角度
+            var speedFactor = SPACEDEMO.speedMultiplier || 1;
+            c.angle += 0.001 * speedFactor * (2 * Math.PI / c.data.orbitalPeriod);
+            var theta = c.angle;
+            var incl = (c.data.orbitalInclination || 0) * Math.PI / 180;
+            var a = (c.data.perihelionDist + c.data.aphelionDist) / 2;
+            var ecc = (c.data.aphelionDist - c.data.perihelionDist) / (c.data.perihelionDist + c.data.aphelionDist);
+            var r = a * (1 - ecc * ecc) / (1 + ecc * Math.cos(theta));
+            // 计算近日点偏移角度
+            var periOffset = (c.data.argOfPerihelion || 0) * Math.PI / 180;
+            var th = theta + periOffset;
+            var x = Math.cos(th) * r;
+            var z = Math.sin(th) * r;
+            var y = Math.sin(th) * r * Math.sin(incl);
+            z *= Math.cos(incl);
+            c.mesh.position.set(x, y, z);
+            c.mesh.rotation.y += 0.005 * speedFactor;
+
+            // ---- 更新彗星尾 ----
+            // 尾巴方向：从太阳指向彗星（背离太阳）
+            var sunDir = c.mesh.position.clone().normalize();
+            // 距离太阳的距离决定尾巴强度
+            var distToSun = c.mesh.position.length();
+            // 近日点时强度最大，远日点时最小
+            var tailStrength = Math.max(0, 1 - (distToSun - c.data.perihelionDist) / (c.data.aphelionDist - c.data.perihelionDist));
+            tailStrength = Math.pow(tailStrength, 0.6); // 非线性映射
+
+            var tailLen = 3 + tailStrength * 20;  // 尾巴长度
+            var pos = c.tailGeom.attributes.position.array;
+            var count = c.tailCount;
+
+            // 构建正交基（用于尾巴横向扩散）
+            var up = new THREE.Vector3(0, 1, 0);
+            if (Math.abs(sunDir.dot(up)) > 0.9) up.set(1, 0, 0);
+            var right = new THREE.Vector3().crossVectors(sunDir, up).normalize();
+            var localUp = new THREE.Vector3().crossVectors(right, sunDir).normalize();
+
+            for (var i = 0; i < count; i++) {
+                var t = i / count;
+                // 使用预生成种子（避免每帧随机闪烁）
+                var angleH = c.tailSeedAngles[i];
+                var seedX = c.tailSeedOffsets[i*2];
+                var seedY = c.tailSeedOffsets[i*2+1];
+                // 粒子沿尾巴方向分布，近端密远端疏
+                var dist = tailLen * Math.pow(t, 0.7);
+                // 横向扩散随距离增大
+                var spread = 0.3 + t * 1.2;
+                var sideX = Math.cos(angleH) * spread * t;
+                var sideY = Math.sin(angleH) * spread * t * 0.3;
+                // 弯曲效果（太阳风）
+                var bend = t * t * 1.5 * tailStrength;
+                // 基础尾向量
+                var basePos = new THREE.Vector3().copy(sunDir).multiplyScalar(dist);
+                basePos.add(right.clone().multiplyScalar(sideX));
+                basePos.add(localUp.clone().multiplyScalar(sideY));
+                basePos.y -= bend * 0.3;
+
+                pos[i*3] = c.mesh.position.x - basePos.x;
+                pos[i*3+1] = c.mesh.position.y - basePos.y;
+                pos[i*3+2] = c.mesh.position.z - basePos.z;
+            }
+            c.tailGeom.attributes.position.needsUpdate = true;
+            // 统一控制尾巴大小和透明度
+            c.tailMat.size = 0.5 + tailStrength * 1.8;
+            c.tailMat.opacity = 0.2 + tailStrength * 0.6;
+        }
+
         // 更新轨道标记点位置
         if (SPACEDEMO.orbitMarkers) {
             SPACEDEMO.orbitMarkers.forEach(function(om) {

@@ -235,6 +235,48 @@ function getPlanetTexture(p) {
             [65,160,200], [85,185,225], [75,170,210]
         ]);
     }
+    // 冥王星冰质地表（心形区域模拟）
+    if (p.texType === 'pluto') {
+        var canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        var ctx = canvas.getContext('2d');
+        // 基底：冰棕色
+        var grad = ctx.createRadialGradient(w/2, h/2, 0, w/2, h/2, w/2);
+        grad.addColorStop(0, '#ccbbaa');
+        grad.addColorStop(0.4, '#bba88a');
+        grad.addColorStop(0.7, '#998877');
+        grad.addColorStop(1, '#665544');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, w, h);
+        // 心形区域（汤博区）
+        ctx.save();
+        var cx = w * 0.4, cy = h * 0.45;
+        ctx.fillStyle = 'rgba(220,210,195,0.5)';
+        ctx.beginPath();
+        ctx.ellipse(cx-20, cy-10, 25, 20, 0.2, 0, Math.PI*2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(cx+20, cy-10, 28, 22, -0.2, 0, Math.PI*2);
+        ctx.fill();
+        ctx.fillStyle = 'rgba(230,225,215,0.3)';
+        ctx.beginPath();
+        ctx.ellipse(cx-18, cy-8, 18, 15, 0.2, 0, Math.PI*2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(cx+18, cy-8, 20, 16, -0.2, 0, Math.PI*2);
+        ctx.fill();
+        ctx.restore();
+        // 陨石坑
+        for (var i = 0; i < 40; i++) {
+            var x = Math.random() * w, y = Math.random() * h;
+            var r = Math.random() * 6 + 2;
+            ctx.beginPath();
+            ctx.arc(x, y, r, 0, Math.PI*2);
+            ctx.fillStyle = 'rgba(80,70,60,' + (Math.random()*0.3+0.1) + ')';
+            ctx.fill();
+        }
+        return new THREE.CanvasTexture(canvas);
+    }
     return createBandTexture(w, h, [
         [0, 200,180,160], [0.5, 220,200,180], [1.0, 200,180,160]
     ], { scale:5, amount:5 });

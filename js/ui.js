@@ -386,17 +386,36 @@ function setupInteractionEvents() {
                 var hit = intersects[0].object;
                 if (hit.userData && hit.userData.name) {
                     // 双击行星
+                    var found = false;
                     SPACEDEMO.planets.forEach(function(p) {
                         if (p.data.name === hit.userData.name) {
+                            found = true;
                             if (SPACEDEMO.focusedPlanet && SPACEDEMO.focusedPlanet.data.name === p.data.name) {
-                                // 已聚焦则复位
                                 resetFocus();
                             } else {
                                 focusOnPlanet(p);
                             }
                         }
                     });
-                    return;
+                    // 双击冥王星
+                    if (!found && SPACEDEMO.pluto && SPACEDEMO.pluto.data.name === hit.userData.name) {
+                        if (SPACEDEMO.focusedPlanet && SPACEDEMO.focusedPlanet.data.name === SPACEDEMO.pluto.data.name) {
+                            resetFocus();
+                        } else {
+                            focusOnPlanet(SPACEDEMO.pluto);
+                        }
+                        found = true;
+                    }
+                    // 双击彗星
+                    if (!found && SPACEDEMO.comet && SPACEDEMO.comet.data.name === hit.userData.name) {
+                        if (SPACEDEMO.focusedPlanet && SPACEDEMO.focusedPlanet.data.name === SPACEDEMO.comet.data.name) {
+                            resetFocus();
+                        } else {
+                            focusOnPlanet(SPACEDEMO.comet);
+                        }
+                        found = true;
+                    }
+                    if (found) return;
                 }
             }
             // 双击空白 → 复位
@@ -419,11 +438,23 @@ function setupInteractionEvents() {
             }
             // 行星点击检测
             if (hit.userData && hit.userData.name) {
+                var found = false;
                 SPACEDEMO.planets.forEach(function(p) {
                     if (p.data.name === hit.userData.name) {
                         showPlanetCard(p.data);
+                        found = true;
                     }
                 });
+                // 单击冥王星
+                if (!found && SPACEDEMO.pluto && SPACEDEMO.pluto.data.name === hit.userData.name) {
+                    showPlanetCard(SPACEDEMO.pluto.data);
+                    found = true;
+                }
+                // 单击彗星
+                if (!found && SPACEDEMO.comet && SPACEDEMO.comet.data.name === hit.userData.name) {
+                    showPlanetCard(SPACEDEMO.comet.data);
+                    found = true;
+                }
             }
         }
     });
