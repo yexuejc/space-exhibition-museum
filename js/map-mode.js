@@ -323,8 +323,6 @@ function positionCameraNearEarth(earthEntry, dist) {
     SPACEDEMO.controls.update();
 
     SPACEDEMO.focusedPlanet = earthEntry;
-    SPACEDEMO.focusRing.visible = true;
-    SPACEDEMO.focusRing.position.copy(target);
 
     // 同步缩放滑块
     SPACEDEMO.targetZoomDist = dist;

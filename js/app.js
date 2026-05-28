@@ -142,10 +142,6 @@ function initVR() {
         if (SPACEDEMO.focusedPlanet && !SPACEDEMO.focusAnim) {
             var fp = SPACEDEMO.focusedPlanet;
             SPACEDEMO.controls.target.copy(fp.mesh.position);
-            SPACEDEMO.focusRing.position.copy(fp.mesh.position);
-            SPACEDEMO.focusRing.position.y += fp.data.radius + 0.8;
-            SPACEDEMO.focusRing.rotation.x = -Math.PI / 2;
-            SPACEDEMO.focusRing.rotation.z += 0.02;
 
             // 标签高亮
             SPACEDEMO.labelObjects.forEach(function(lo) {
@@ -153,7 +149,6 @@ function initVR() {
                 else lo.div.classList.remove('focused');
             });
         } else {
-            SPACEDEMO.focusRing.visible = false;
             SPACEDEMO.labelObjects.forEach(function(lo) {
                 lo.div.classList.remove('focused');
             });

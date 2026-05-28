@@ -104,8 +104,6 @@ function focusOnPlanet(planetEntry) {
         progress: 0
     };
     SPACEDEMO.focusedPlanet = planetEntry;
-    SPACEDEMO.focusRing.visible = true;
-    SPACEDEMO.focusRing.position.copy(target);
     // 缩放滑块同步到目标距离
     var dist = planetEntry.data.radius * 4;
     SPACEDEMO.targetZoomDist = dist;
@@ -128,7 +126,6 @@ function resetFocus() {
         progress: 0
     };
     SPACEDEMO.focusedPlanet = null;
-    SPACEDEMO.focusRing.visible = false;
     SPACEDEMO.targetZoomDist = 100;
     var sliderVal = zoomToSlider(100);
     var slider = document.getElementById('zoomSlider');

@@ -509,16 +509,7 @@ function buildSolarSystem() {
         });
     });
 
-    // ===== 聚焦环 =====
-    var focusRingGeo = new THREE.RingGeometry(0.6, 0.8, 32);
-    var focusRingMat = new THREE.MeshBasicMaterial({
-        color: 0x00ffff, side: THREE.DoubleSide, transparent: true, opacity: 0.6
-    });
-    var focusRing = new THREE.Mesh(focusRingGeo, focusRingMat);
-    focusRing.rotation.x = -Math.PI / 2;
-    focusRing.visible = false;
-    scene.add(focusRing);
-    SPACEDEMO.focusRing = focusRing;
+    // ===== 聚焦环（已移除，改用标签高亮代替）=====
 
     // 标签可见状态
     SPACEDEMO.labelsVisible = true;
