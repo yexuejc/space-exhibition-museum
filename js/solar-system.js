@@ -150,7 +150,7 @@ function buildSolarSystem() {
             '    float glow = 1.0 - abs(vNormal.z);',
             '    glow = pow(glow, 2.0) * pulse;',
             '    vec3 color = mix(vec3(1.0, 0.6, 0.1), vec3(1.0, 0.2, 0.0), glow);',
-            '    gl_FragColor = vec4(color, glow * 0.35);',
+            '    gl_FragColor = vec4(color, glow * 0.12);',
             '}'
         ].join('\n'),
         transparent: true, side: THREE.BackSide,
@@ -158,7 +158,7 @@ function buildSolarSystem() {
         uniforms: { uTime: { value: 0 } }
     });
     var glowMesh = new THREE.Mesh(
-        new THREE.SphereGeometry(SUN_RADIUS * 1.3, 32, 32),
+        new THREE.SphereGeometry(SUN_RADIUS * 1.2, 32, 32),
         glowMat
     );
     scene.add(glowMesh);
@@ -182,7 +182,7 @@ function buildSolarSystem() {
             '    float glow = 1.0 - abs(vNormal.z);',
             '    glow = pow(glow, 3.0) * pulse;',
             '    vec3 color = vec3(1.0, 0.4, 0.05);',
-            '    gl_FragColor = vec4(color, glow * 0.12);',
+            '    gl_FragColor = vec4(color, glow * 0.05);',
             '}'
         ].join('\n'),
         transparent: true, side: THREE.BackSide,
@@ -190,14 +190,14 @@ function buildSolarSystem() {
         uniforms: { uTime: { value: 0 } }
     });
     var outerGlow = new THREE.Mesh(
-        new THREE.SphereGeometry(SUN_RADIUS * 1.7, 32, 32),
+        new THREE.SphereGeometry(SUN_RADIUS * 1.5, 32, 32),
         outerGlowMat
     );
     scene.add(outerGlow);
     SPACEDEMO.outerGlowMat = outerGlowMat;
 
-    // 太阳日冕粒子系统（围绕太阳运动的粒子环）
-    var coronaParticleCount = 800;
+    // 太阳日冕粒子系统（低亮度版）
+    var coronaParticleCount = 400;
     var coronaPos = new Float32Array(coronaParticleCount * 3);
     var coronaSizes = new Float32Array(coronaParticleCount);
     var coronaOffsets = new Float32Array(coronaParticleCount);
@@ -206,11 +206,11 @@ function buildSolarSystem() {
     for (var i = 0; i < coronaParticleCount; i++) {
         var theta = Math.random() * Math.PI * 2;
         var phi = Math.acos(2 * Math.random() - 1);
-        var r = SUN_RADIUS * (1.2 + Math.random() * 0.8);
+        var r = SUN_RADIUS * (1.1 + Math.random() * 0.5);
         coronaPos[i*3] = r * Math.sin(phi) * Math.cos(theta);
-        coronaPos[i*3+1] = r * Math.sin(phi) * Math.sin(theta) * 0.4;
+        coronaPos[i*3+1] = r * Math.sin(phi) * Math.sin(theta) * 0.3;
         coronaPos[i*3+2] = r * Math.cos(phi);
-        coronaSizes[i] = Math.random() * 1.5 + 0.3;
+        coronaSizes[i] = Math.random() * 0.8 + 0.2;
         coronaOffsets[i] = Math.random() * Math.PI * 2;
         coronaSpeeds[i] = 0.3 + Math.random() * 0.7;
     }
@@ -233,9 +233,9 @@ function buildSolarSystem() {
     var dotTex = new THREE.CanvasTexture(dotCanvas);
 
     var coronaMat = new THREE.PointsMaterial({
-        size: 0.6, map: dotTex, transparent: true, opacity: 0.7,
+        size: 0.35, map: dotTex, transparent: true, opacity: 0.25,
         blending: THREE.AdditiveBlending, depthWrite: false,
-        color: 0xffaa44, sizeAttenuation: true
+        color: 0xff8833, sizeAttenuation: true
     });
     var coronaParticles = new THREE.Points(coronaGeom, coronaMat);
     scene.add(coronaParticles);

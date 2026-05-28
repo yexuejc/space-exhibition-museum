@@ -99,7 +99,7 @@ function initVR() {
             for (var ci = 0; ci < cd.count; ci++) {
                 cd.theta[ci] += 0.005 * cd.speeds[ci];
                 var baseAngle = cd.theta[ci];
-                var r = SUN_RADIUS * (1.2 + 0.8 * (0.5 + 0.5 * Math.sin(coronaTime * cd.speeds[ci] + cd.offsets[ci])));
+                var r = SUN_RADIUS * (1.1 + 0.3 * (0.5 + 0.5 * Math.sin(coronaTime * cd.speeds[ci] + cd.offsets[ci])));
                 var phiOff = 0.3 * Math.sin(coronaTime * 0.3 + cd.offsets[ci]);
                 pos[ci*3] = r * Math.sin(baseAngle) * Math.cos(phiOff);
                 pos[ci*3+1] = r * Math.sin(phiOff) * 0.8;
@@ -111,7 +111,7 @@ function initVR() {
             if (sizes) {
                 var sArr = sizes.array;
                 for (var ci = 0; ci < cd.count; ci++) {
-                    sArr[ci] = (0.3 + 0.5 * Math.sin(coronaTime * 1.2 + cd.offsets[ci])) * 1.5 + 0.3;
+                    sArr[ci] = 0.3 + 0.2 * Math.sin(coronaTime * 1.2 + cd.offsets[ci]);
                 }
                 sizes.needsUpdate = true;
             }
