@@ -73,9 +73,49 @@ function initVR() {
             }
         });
 
-        // 太阳自转
+        // 更新轨道标记点位置
+        if (SPACEDEMO.orbitMarkers) {
+            SPACEDEMO.orbitMarkers.forEach(function(om) {
+                var angle = getPlanetAngle(om.planetData);
+                var pos = om.marker.geometry.attributes.position.array;
+                pos[0] = Math.cos(angle) * om.dist;
+                pos[2] = Math.sin(angle) * om.dist;
+                om.marker.geometry.attributes.position.needsUpdate = true;
+            });
+        }
+
+        // 太阳自转 + 日冕动画
         SPACEDEMO.sun.rotation.y += 0.0008;
-        if (SPACEDEMO.glow) SPACEDEMO.glow.rotation.y += 0.0004;
+        var coronaTime = performance.now() / 1000;
+        // 更新辉光 Shader 时间
+        if (SPACEDEMO.glowMat) SPACEDEMO.glowMat.uniforms.uTime.value = coronaTime;
+        if (SPACEDEMO.outerGlowMat) SPACEDEMO.outerGlowMat.uniforms.uTime.value = coronaTime;
+        // 更新星星 Shader 时间
+        if (SPACEDEMO.starMat) SPACEDEMO.starMat.uniforms.uTime.value = coronaTime;
+        // 日冕粒子动画
+        if (SPACEDEMO.coronaParticles && SPACEDEMO.coronaData) {
+            var cd = SPACEDEMO.coronaData;
+            var pos = SPACEDEMO.coronaParticles.geometry.attributes.position.array;
+            for (var ci = 0; ci < cd.count; ci++) {
+                cd.theta[ci] += 0.005 * cd.speeds[ci];
+                var baseAngle = cd.theta[ci];
+                var r = SUN_RADIUS * (1.2 + 0.8 * (0.5 + 0.5 * Math.sin(coronaTime * cd.speeds[ci] + cd.offsets[ci])));
+                var phiOff = 0.3 * Math.sin(coronaTime * 0.3 + cd.offsets[ci]);
+                pos[ci*3] = r * Math.sin(baseAngle) * Math.cos(phiOff);
+                pos[ci*3+1] = r * Math.sin(phiOff) * 0.8;
+                pos[ci*3+2] = r * Math.cos(baseAngle) * Math.cos(phiOff);
+            }
+            SPACEDEMO.coronaParticles.geometry.attributes.position.needsUpdate = true;
+            // 粒子大小脉动
+            var sizes = SPACEDEMO.coronaParticles.geometry.attributes.size;
+            if (sizes) {
+                var sArr = sizes.array;
+                for (var ci = 0; ci < cd.count; ci++) {
+                    sArr[ci] = (0.3 + 0.5 * Math.sin(coronaTime * 1.2 + cd.offsets[ci])) * 1.5 + 0.3;
+                }
+                sizes.needsUpdate = true;
+            }
+        }
 
         // 更新小行星带
         updateAsteroids();

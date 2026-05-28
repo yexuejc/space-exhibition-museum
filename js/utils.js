@@ -1,7 +1,7 @@
 // ===== 太空探索博物馆 - 工具函数 =====
 // 时间引擎、粒子背景、数学工具
 
-// ===== 2D Canvas 粒子星空背景 =====
+// ===== 2D Canvas 粒子星空背景（增强闪烁版）=====
 function initParticles() {
     var canvas = document.createElement('canvas');
     canvas.id = 'bgStarCanvas';
@@ -12,21 +12,52 @@ function initParticles() {
     function resize() { W = window.innerWidth; H = window.innerHeight; canvas.width = W; canvas.height = H; }
     resize();
     window.addEventListener('resize', resize);
-    for (var i = 0; i < 200; i++) {
+    // 生成星星 - 大星(亮) + 小星(暗)混合
+    for (var i = 0; i < 300; i++) {
+        var isBig = Math.random() < 0.15;
         stars.push({
             x: Math.random() * W, y: Math.random() * H,
-            r: Math.random() * 2 + 0.5,
-            dx: (Math.random() - 0.5) * 0.3, dy: (Math.random() - 0.5) * 0.3,
-            a: Math.random() * 0.8 + 0.2, da: (Math.random() - 0.5) * 0.005
+            r: isBig ? Math.random() * 1.5 + 1.2 : Math.random() * 1.0 + 0.3,
+            dx: (Math.random() - 0.5) * 0.15, dy: (Math.random() - 0.5) * 0.15,
+            a: isBig ? Math.random() * 0.6 + 0.4 : Math.random() * 0.4 + 0.15,
+            baseA: 0, // 基准亮度
+            phase: Math.random() * Math.PI * 2, // 闪烁相位
+            speed: 0.8 + Math.random() * 2.0,   // 闪烁速度
+            twinkleAmp: isBig ? 0.3 + Math.random() * 0.3 : 0.15 + Math.random() * 0.2, // 闪烁幅度
+            isBig: isBig
         });
+        stars[i].baseA = stars[i].a;
     }
+    var startTime = performance.now();
     function draw() {
+        var elapsed = (performance.now() - startTime) / 1000;
         ctx.clearRect(0, 0, W, H);
         stars.forEach(function(s) {
-            s.x += s.dx; s.y += s.dy; s.a += s.da;
-            if (s.a > 1 || s.a < 0.1) s.da = -s.da;
-            if (s.x < 0) s.x = W; if (s.x > W) s.x = 0;
-            if (s.y < 0) s.y = H; if (s.y > H) s.y = 0;
+            s.x += s.dx; s.y += s.dy;
+            // 闪烁
+            var twinkle = Math.sin(elapsed * s.speed + s.phase);
+            s.a = Math.max(0.05, s.baseA + twinkle * s.twinkleAmp);
+            // 边界循环
+            if (s.x < -5) s.x = W + 5; if (s.x > W + 5) s.x = -5;
+            if (s.y < -5) s.y = H + 5; if (s.y > H + 5) s.y = -5;
+            // 大星带十字光芒
+            if (s.isBig && s.r > 1.8) {
+                var glowAlpha = s.a * 0.15;
+                ctx.beginPath();
+                ctx.arc(s.x, s.y, s.r * 3, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(200,220,255,' + glowAlpha + ')';
+                ctx.fill();
+                // 十字光芒
+                ctx.strokeStyle = 'rgba(255,255,255,' + (glowAlpha * 0.5) + ')';
+                ctx.lineWidth = 0.5;
+                for (var ri = 0; ri < 4; ri++) {
+                    var angle = ri * Math.PI / 4 + elapsed * 0.05;
+                    ctx.beginPath();
+                    ctx.moveTo(s.x - Math.cos(angle) * s.r * 5, s.y - Math.sin(angle) * s.r * 5);
+                    ctx.lineTo(s.x + Math.cos(angle) * s.r * 5, s.y + Math.sin(angle) * s.r * 5);
+                    ctx.stroke();
+                }
+            }
             ctx.beginPath();
             ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
             ctx.fillStyle = 'rgba(255,255,255,' + s.a + ')';
