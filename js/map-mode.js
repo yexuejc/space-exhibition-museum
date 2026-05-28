@@ -5,8 +5,10 @@
 var mapInstance = null;
 var mapDom = null;
 var isMapLoading = false;
+var lastMapExitTime = 0;
 var MAP_AUTO_ENTER_DIST = 2.5; // 3D 相机距离地球多远时自动进入地图
 var MAP_AUTO_EXIT_ZOOM = 12;   // 地图缩放低于多少时自动退出（回到太空）
+var MAP_EXIT_COOLDOWN = 3000;  // 退出地图后冷却(ms)，防止闪回循环
 
 // ===== 计算相机看地球的哪个面 =====
 // 根据相机相对地球位置估算经度/纬度，用于地图居中
@@ -305,6 +307,10 @@ function showMapTip() {
 
 // ===== 将相机定位到地球近轨 =====
 function positionCameraNearEarth(earthEntry, dist) {
+    // 确保退出后的距离不会立即触发自动进入（使用稍大一点的距离）
+    if (dist < MAP_AUTO_ENTER_DIST + 0.5) {
+        dist = MAP_AUTO_ENTER_DIST + 0.5;
+    }
     var target = earthEntry.mesh.position.clone();
     // 保持相机当前的方向角度（相对于太阳），但调整距离
     var camPos = SPACEDEMO.camera.position.clone();
@@ -331,6 +337,7 @@ function positionCameraNearEarth(earthEntry, dist) {
 // ===== 退出地图模式 =====
 function exitMapMode() {
     if (!SPACEDEMO.mapModeActive) return;
+    lastMapExitTime = Date.now();
     SPACEDEMO.mapModeActive = false;
     if (mapDom) {
         mapDom.remove();
@@ -408,6 +415,8 @@ function updateEnterMapButton() {
 function checkAutoEnterMap() {
     if (SPACEDEMO.mapModeActive) return;
     if (SPACEDEMO.focusAnim) return; // 动画中不要打断
+    // 退出冷却期内不进入
+    if (Date.now() - lastMapExitTime < MAP_EXIT_COOLDOWN) return;
     if (!SPACEDEMO.focusedPlanet || SPACEDEMO.focusedPlanet.data.name !== '地球') return;
 
     var dist = SPACEDEMO.camera.position.distanceTo(SPACEDEMO.controls.target);
