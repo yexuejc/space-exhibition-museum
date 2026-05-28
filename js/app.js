@@ -140,6 +140,9 @@ function initVR() {
         // 更新地图模式按钮
         updateEnterMapButton();
 
+        // ===== 自动进入地图模式检测 =====
+        checkAutoEnterMap();
+
         // 更新标签可见性（基于相机距离）
         SPACEDEMO.labelObjects.forEach(function(lo) {
             if (!SPACEDEMO.labelsVisible) {
