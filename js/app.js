@@ -37,8 +37,17 @@ function initVR() {
     setupResizeHandler();
     setupSpeechControl();
 
-    // 6. 设置地图模式
+    // 6. 初始化流星雨
+    initMeteors();
+
+    // 7. 设置地图模式
     setupMapModeButton();
+
+    // 8. 自动漫游按钮
+    setupAutoTour();
+
+    // 9. 语言切换按钮
+    setupLangToggle();
 
     // 7. 默认显示标签
     SPACEDEMO.labelObjects.forEach(function(lo) {
@@ -53,9 +62,17 @@ function initVR() {
     // 对外暴露（用于 VR 按钮等）
     window.initVR = initVR;
 
+    // 帧时间追踪（用于流星等）
+    var lastFrameTime = performance.now();
+
     // ===== 主循环开始 =====
     function animate() {
         requestAnimationFrame(animate);
+
+        var now = performance.now();
+        var deltaTime = (now - lastFrameTime) / 1000;
+        if (deltaTime > 0.1) deltaTime = 0.016; // 防止切标签后跳帧
+        lastFrameTime = now;
 
         // 更新时间
         updateTime();
@@ -216,6 +233,9 @@ function initVR() {
         // 更新小行星带
         updateAsteroids();
 
+        // 更新流星雨
+        updateMeteors(deltaTime);
+
         // 银河背景缓慢旋转
         if (SPACEDEMO.milkyWay) {
             SPACEDEMO.milkyWay.rotation.y += 0.00005;
@@ -252,10 +272,15 @@ function initVR() {
                 if (lo.data === fp.data) lo.div.classList.add('focused');
                 else lo.div.classList.remove('focused');
             });
-        } else {
+        } else if (!tourActive) {
+            // 非漫游模式才清除高亮
             SPACEDEMO.labelObjects.forEach(function(lo) {
                 lo.div.classList.remove('focused');
             });
+        }
+        // 漫游模式时标签高亮由 updateTour 控制
+        if (tourActive) {
+            updateTour();
         }
 
         // ===== 缩放滑块控制（平滑逼近目标距离）=====

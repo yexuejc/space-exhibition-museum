@@ -87,6 +87,18 @@ function updateTime() {
 
 function getSimDate() { return new Date(simTime); }
 
+// 设置模拟日期（时间戳或 Date 对象），用于日期跳转功能
+function setSimulationDate(dateInput) {
+    if (typeof dateInput === 'number') {
+        simTime = dateInput;
+    } else if (dateInput instanceof Date) {
+        simTime = dateInput.getTime();
+    } else if (typeof dateInput === 'string') {
+        simTime = new Date(dateInput).getTime();
+    }
+    lastRealTime = performance.now();
+}
+
 // 计算行星轨道角度（基于 J2000 历元真实轨道参数）
 function getPlanetAngle(p) {
     var j2000 = new Date('2000-01-01T12:00:00Z').getTime();
