@@ -415,6 +415,24 @@ function setupInteractionEvents() {
                         }
                         found = true;
                     }
+                    // 双击谷神星
+                    if (!found && SPACEDEMO.ceres && SPACEDEMO.ceres.data.name === hit.userData.name) {
+                        if (SPACEDEMO.focusedPlanet && SPACEDEMO.focusedPlanet.data.name === SPACEDEMO.ceres.data.name) {
+                            resetFocus();
+                        } else {
+                            focusOnPlanet(SPACEDEMO.ceres);
+                        }
+                        found = true;
+                    }
+                    // 双击阋神星
+                    if (!found && SPACEDEMO.eris && SPACEDEMO.eris.data.name === hit.userData.name) {
+                        if (SPACEDEMO.focusedPlanet && SPACEDEMO.focusedPlanet.data.name === SPACEDEMO.eris.data.name) {
+                            resetFocus();
+                        } else {
+                            focusOnPlanet(SPACEDEMO.eris);
+                        }
+                        found = true;
+                    }
                     if (found) return;
                 }
             }
@@ -453,6 +471,16 @@ function setupInteractionEvents() {
                 // 单击彗星
                 if (!found && SPACEDEMO.comet && SPACEDEMO.comet.data.name === hit.userData.name) {
                     showPlanetCard(SPACEDEMO.comet.data);
+                    found = true;
+                }
+                // 单击谷神星
+                if (!found && SPACEDEMO.ceres && SPACEDEMO.ceres.data.name === hit.userData.name) {
+                    showPlanetCard(SPACEDEMO.ceres.data);
+                    found = true;
+                }
+                // 单击阋神星
+                if (!found && SPACEDEMO.eris && SPACEDEMO.eris.data.name === hit.userData.name) {
+                    showPlanetCard(SPACEDEMO.eris.data);
                     found = true;
                 }
             }

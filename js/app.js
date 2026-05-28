@@ -86,6 +86,21 @@ function initVR() {
             SPACEDEMO.pluto.mesh.rotation.y = getPlanetRotation(SPACEDEMO.pluto.data);
         }
 
+        // 更新更多矮行星位置（谷神星、阋神星）
+        ['ceres','eris'].forEach(function(key) {
+            if (SPACEDEMO[key]) {
+                var obj = SPACEDEMO[key];
+                var angle = getPlanetAngle(obj.data);
+                var incl = (obj.data.orbitalInclination || 0) * Math.PI / 180;
+                obj.mesh.position.set(
+                    Math.cos(angle) * obj.data.dist,
+                    Math.sin(angle) * obj.data.dist * Math.sin(incl),
+                    Math.sin(angle) * obj.data.dist * Math.cos(incl)
+                );
+                obj.mesh.rotation.y = getPlanetRotation(obj.data);
+            }
+        });
+
         // ===== 彗星轨道更新 =====
         if (SPACEDEMO.comet) {
             var c = SPACEDEMO.comet;
@@ -202,6 +217,14 @@ function initVR() {
 
         // 更新小行星带
         updateAsteroids();
+
+        // 银河背景缓慢旋转
+        if (SPACEDEMO.milkyWay) {
+            SPACEDEMO.milkyWay.rotation.y += 0.00005;
+        }
+        if (SPACEDEMO.milkyWayCore) {
+            SPACEDEMO.milkyWayCore.rotation.y += 0.00006;
+        }
 
         // 更新卫星
         updateMoons();

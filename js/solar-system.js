@@ -348,25 +348,81 @@ function buildSolarSystem() {
             mesh.add(new THREE.Mesh(backGeo, backMat));
         }
 
-        // 土星环
+        // 行星环（土星/木星/天王星/海王星）
         var ringMesh = null;
         if (p.hasRing) {
-            var ringGeo = new THREE.RingGeometry(p.radius * 1.3, p.radius * 2.5, 64);
-            var ringCanvas = document.createElement('canvas');
-            ringCanvas.width = 512; ringCanvas.height = 64;
-            var rctx = ringCanvas.getContext('2d');
-            for (var ri = 0; ri < 512; ri++) {
-                var t = ri / 512;
-                var gray = 150 + Math.sin(t * 30) * 40 + Math.sin(t * 17) * 20 + Math.sin(t * 53) * 15;
-                var alpha = 0.3 + Math.sin(t * 20) * 0.2 + Math.sin(t * 45) * 0.1;
-                rctx.fillStyle = 'rgba(' + Math.round(gray) + ',' + Math.round(gray*0.85) + ',' + Math.round(gray*0.7) + ',' + Math.max(0,Math.min(1,alpha)) + ')';
-                rctx.fillRect(ri, 0, 1, 64);
+            if (p.ringType === 'uranus') {
+                // 天王星侧向窄环（垂直倾斜）
+                var ringGeo = new THREE.RingGeometry(p.radius * 1.1, p.radius * 1.6, 64);
+                var rCanvas = document.createElement('canvas');
+                rCanvas.width = 256; rCanvas.height = 32;
+                var rctx = rCanvas.getContext('2d');
+                for (var ri = 0; ri < 256; ri++) {
+                    var t = ri / 256;
+                    var alpha = 0.15 + Math.sin(t * 40) * 0.1 + Math.sin(t * 23) * 0.05;
+                    rctx.fillStyle = 'rgba(120,200,240,' + Math.max(0,Math.min(0.35,alpha)) + ')';
+                    rctx.fillRect(ri, 0, 1, 32);
+                }
+                var ringTex = new THREE.CanvasTexture(rCanvas);
+                ringMesh = new THREE.Mesh(ringGeo, new THREE.MeshBasicMaterial({
+                    map: ringTex, side: THREE.DoubleSide, transparent: true, opacity: 0.25, depthWrite: false
+                }));
+                // 天王星侧向环（接近垂直）
+                ringMesh.rotation.x = Math.PI / 2.1;
+            } else if (p.ringType === 'neptune') {
+                // 海王星暗色淡环
+                var ringGeo = new THREE.RingGeometry(p.radius * 1.15, p.radius * 1.5, 64);
+                var rCanvas = document.createElement('canvas');
+                rCanvas.width = 256; rCanvas.height = 16;
+                var rctx = rCanvas.getContext('2d');
+                for (var ri = 0; ri < 256; ri++) {
+                    var t = ri / 256;
+                    var alpha = 0.08 + Math.sin(t * 25) * 0.06;
+                    var blue = Math.round(100 + Math.sin(t * 15) * 40);
+                    rctx.fillStyle = 'rgba(40,60,' + blue + ',' + Math.max(0,Math.min(0.2,alpha)) + ')';
+                    rctx.fillRect(ri, 0, 1, 16);
+                }
+                var ringTex = new THREE.CanvasTexture(rCanvas);
+                ringMesh = new THREE.Mesh(ringGeo, new THREE.MeshBasicMaterial({
+                    map: ringTex, side: THREE.DoubleSide, transparent: true, opacity: 0.15, depthWrite: false
+                }));
+                ringMesh.rotation.x = Math.PI / 2.5;
+            } else if (p.ringType === 'jupiter') {
+                // 木星暗褐色极淡环
+                var ringGeo = new THREE.RingGeometry(p.radius * 1.05, p.radius * 1.8, 64);
+                var rCanvas = document.createElement('canvas');
+                rCanvas.width = 256; rCanvas.height = 16;
+                var rctx = rCanvas.getContext('2d');
+                for (var ri = 0; ri < 256; ri++) {
+                    var t = ri / 256;
+                    var alpha = 0.05 + Math.sin(t * 20) * 0.04;
+                    rctx.fillStyle = 'rgba(120,100,80,' + Math.max(0,Math.min(0.15,alpha)) + ')';
+                    rctx.fillRect(ri, 0, 1, 16);
+                }
+                var ringTex = new THREE.CanvasTexture(rCanvas);
+                ringMesh = new THREE.Mesh(ringGeo, new THREE.MeshBasicMaterial({
+                    map: ringTex, side: THREE.DoubleSide, transparent: true, opacity: 0.1, depthWrite: false
+                }));
+                ringMesh.rotation.x = Math.PI / 2.5;
+            } else {
+                // 默认土星环
+                var ringGeo = new THREE.RingGeometry(p.radius * 1.3, p.radius * 2.5, 64);
+                var ringCanvas = document.createElement('canvas');
+                ringCanvas.width = 512; ringCanvas.height = 64;
+                var rctx = ringCanvas.getContext('2d');
+                for (var ri = 0; ri < 512; ri++) {
+                    var t = ri / 512;
+                    var gray = 150 + Math.sin(t * 30) * 40 + Math.sin(t * 17) * 20 + Math.sin(t * 53) * 15;
+                    var alpha = 0.3 + Math.sin(t * 20) * 0.2 + Math.sin(t * 45) * 0.1;
+                    rctx.fillStyle = 'rgba(' + Math.round(gray) + ',' + Math.round(gray*0.85) + ',' + Math.round(gray*0.7) + ',' + Math.max(0,Math.min(1,alpha)) + ')';
+                    rctx.fillRect(ri, 0, 1, 64);
+                }
+                var ringTex = new THREE.CanvasTexture(ringCanvas);
+                ringMesh = new THREE.Mesh(ringGeo, new THREE.MeshBasicMaterial({
+                    map: ringTex, side: THREE.DoubleSide, transparent: true, opacity: 0.85, depthWrite: false
+                }));
+                ringMesh.rotation.x = Math.PI / 2.5;
             }
-            var ringTex = new THREE.CanvasTexture(ringCanvas);
-            ringMesh = new THREE.Mesh(ringGeo, new THREE.MeshBasicMaterial({
-                map: ringTex, side: THREE.DoubleSide, transparent: true, opacity: 0.85, depthWrite: false
-            }));
-            ringMesh.rotation.x = Math.PI / 2.5;
             ringMesh.position.copy(mesh.position);
             scene.add(ringMesh);
         }
@@ -569,6 +625,64 @@ function buildSolarSystem() {
         scene.add(new THREE.Line(orbGeom, orbMat));
     }
 
+    // ===== 更多矮行星（谷神星、阋神星）=====
+    if (typeof dwarfPlanetData !== 'undefined') {
+        dwarfPlanetData.forEach(function(dp) {
+            var tex = getPlanetTexture(dp);
+            var mesh = new THREE.Mesh(
+                new THREE.SphereGeometry(dp.radius, 24, 24),
+                new THREE.MeshStandardMaterial({ map: tex, roughness: 0.7, metalness: 0.05 })
+            );
+            // 初始位置
+            var angle = getPlanetAngle(dp);
+            var incl = (dp.orbitalInclination || 0) * Math.PI / 180;
+            mesh.position.set(
+                Math.cos(angle) * dp.dist,
+                Math.sin(angle) * dp.dist * Math.sin(incl),
+                Math.sin(angle) * dp.dist * Math.cos(incl)
+            );
+            mesh.userData = dp;
+            scene.add(mesh);
+            clickables.push(mesh);
+
+            // 保存引用
+            var key = dp.name === '谷神星' ? 'ceres' : 'eris';
+            SPACEDEMO[key] = { mesh: mesh, data: dp };
+
+            // CSS2D标签
+            if (labelRenderer && typeof THREE.CSS2DObject !== 'undefined') {
+                var div = document.createElement('div');
+                div.className = 'planet-label dwarf-label';
+                div.innerHTML = '<span class="label-icon">' + (dp.icon || '🪐') + '</span>' + dp.name + '<span class="label-sub">矮行星</span>';
+                var label = new THREE.CSS2DObject(div);
+                label.position.set(0, dp.radius + 1.0, 0);
+                mesh.add(label);
+                labelObjects.push({ label: label, data: dp, div: div });
+            }
+
+            // 轨道线（倾斜椭圆）
+            var segs = 48;
+            var pts = [];
+            var ecc = dp.orbitalEccentricity || 0;
+            var inclRad = (dp.orbitalInclination || 0) * Math.PI / 180;
+            for (var i = 0; i <= segs; i++) {
+                var theta = (i / segs) * Math.PI * 2;
+                var r = ecc > 0 ? dp.dist * (1 - ecc*ecc) / (1 + ecc * Math.cos(theta)) : dp.dist;
+                pts.push(new THREE.Vector3(
+                    Math.cos(theta) * r,
+                    Math.sin(theta) * r * Math.sin(inclRad),
+                    Math.sin(theta) * r * Math.cos(inclRad)
+                ));
+            }
+            var orbGeom = new THREE.BufferGeometry().setFromPoints(pts);
+            var orbMat = new THREE.LineBasicMaterial({
+                color: dp.name === '谷神星' ? 0xaa9966 : 0xddddcc,
+                transparent: true, opacity: 0.12
+            });
+            scene.add(new THREE.Line(orbGeom, orbMat));
+        });
+    }
+
     // ===== 彗星 =====
     if (typeof cometData !== 'undefined') {
         // 彗核（不规则冰质小球）
@@ -680,6 +794,9 @@ function buildSolarSystem() {
 
     // ===== 聚焦环（已移除，改用标签高亮代替）=====
 
+    // ===== 银河背景 =====
+    createMilkyWay(scene);
+
     // 标签可见状态
     SPACEDEMO.labelsVisible = true;
     SPACEDEMO.focusedPlanet = null;
@@ -687,4 +804,128 @@ function buildSolarSystem() {
     SPACEDEMO.isFullscreen = false;
     SPACEDEMO.targetZoomDist = null;
     SPACEDEMO.mapModeActive = false;
+}
+
+// 创建银河背景
+function createMilkyWay(scene) {
+    // 生成银河纹理（宽画布，窄高度）
+    var mwCanvas = document.createElement('canvas');
+    mwCanvas.width = 1024; mwCanvas.height = 256;
+    var ctx = mwCanvas.getContext('2d');
+
+    // 深空背景
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(0, 0, 1024, 256);
+
+    // 银河主体带状光晕（多层噪声叠加）
+    for (var layer = 0; layer < 5; layer++) {
+        for (var x = 0; x < 1024; x++) {
+            var t = x / 1024;
+            // 中心亮，边缘渐暗
+            var centerFade = 1 - Math.pow(Math.abs(t - 0.5) * 2, 1.5);
+            if (centerFade < 0) centerFade = 0;
+            // 噪声波动
+            var noise = 0;
+            for (var n = 0; n < 3; n++) {
+                noise += Math.sin(t * (10 + layer * 5) * Math.PI * 2 + layer * 1.7) * 0.15;
+                noise += Math.sin(t * (23 + layer * 7) * Math.PI * 2 + layer * 3.1) * 0.1;
+            }
+            var brightness = (centerFade * 0.8 + noise * 0.3);
+            if (brightness < 0) brightness = 0;
+            if (brightness > 1) brightness = 1;
+
+            for (var y = 0; y < 256; y++) {
+                var yt = (y - 128) / 128;
+                // 垂直分布（高斯模糊 + 噪声偏移）
+                var bandCenter = 0 + noise * 0.2;
+                var verticalFade = Math.exp(-Math.pow((yt - bandCenter) * (3 + layer * 0.5), 2));
+                var alpha = verticalFade * brightness * (0.08 + layer * 0.03);
+                if (alpha > 0) {
+                    var val = Math.round(180 + Math.random() * 75);
+                    ctx.fillStyle = 'rgba(' + val + ',' + val + ',' + Math.round(val * 1.1) + ',' + alpha + ')';
+                    ctx.fillRect(x, y, 1, 1);
+                }
+            }
+        }
+    }
+
+    // 银河中的亮星团（随机密集区）
+    for (var i = 0; i < 400; i++) {
+        var sx = Math.random() * 1024;
+        var sy = 64 + Math.random() * 128;
+        // 靠近中心线的区域更密集
+        var distFromCenter = Math.abs(sy - 128) / 128;
+        if (Math.random() > (1 - distFromCenter * 0.7)) continue;
+        var size = Math.random() * 3 + 0.5;
+        var alpha = Math.random() * 0.3 + 0.1;
+        ctx.fillStyle = 'rgba(220,230,255,' + alpha + ')';
+        ctx.beginPath();
+        ctx.arc(sx, sy, size, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    // 银河尘埃暗带（中间暗纹）
+    for (var x = 0; x < 1024; x++) {
+        var t = x / 1024;
+        var darkWidth = 15 + Math.sin(t * 12) * 10 + Math.sin(t * 31) * 5;
+        var darkY = 115 + Math.sin(t * 7) * 20 + Math.sin(t * 19) * 10;
+        for (var y = 0; y < darkWidth; y++) {
+            var alpha = (0.3 - Math.abs(y - darkWidth/2) / darkWidth * 0.3) * (0.5 + Math.sin(t * 15 + 2) * 0.2);
+            if (alpha > 0) {
+                ctx.fillStyle = 'rgba(0,0,0,' + alpha + ')';
+                ctx.fillRect(x, Math.round(darkY + y - darkWidth/2), 1, 1);
+            }
+        }
+    }
+
+    var mwTexture = new THREE.CanvasTexture(mwCanvas);
+
+    // 创建巨大的银河环带
+    var mwGeo = new THREE.RingGeometry(130, 250, 80);
+    // 修改UV让纹理径向映射
+    var pos = mwGeo.attributes.position;
+    var uvs = mwGeo.attributes.uv;
+    if (uvs) {
+        for (var i = 0; i < pos.count; i++) {
+            var x = pos.getX(i), z = pos.getZ(i);
+            var angle = Math.atan2(z, x) / (Math.PI * 2);
+            if (angle < 0) angle += 1;
+            var r = Math.sqrt(x*x + z*z);
+            var u = angle;
+            var v = (r - 130) / 120;
+            uvs.setXY(i, u, v);
+        }
+    }
+
+    var mwMat = new THREE.MeshBasicMaterial({
+        map: mwTexture,
+        side: THREE.DoubleSide,
+        transparent: true,
+        opacity: 0.35,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending
+    });
+
+    var milkyWay = new THREE.Mesh(mwGeo, mwMat);
+    // 倾斜银河（与真实银河倾角近似）
+    milkyWay.rotation.x = Math.PI * 0.35;
+    milkyWay.rotation.z = Math.PI * 0.15;
+    scene.add(milkyWay);
+    SPACEDEMO.milkyWay = milkyWay;
+
+    // 第二层：内部更亮的银河核心
+    var coreGeo = new THREE.RingGeometry(130, 165, 80);
+    var coreMat = new THREE.MeshBasicMaterial({
+        map: mwTexture,
+        side: THREE.DoubleSide,
+        transparent: true,
+        opacity: 0.15,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending
+    });
+    var coreBand = new THREE.Mesh(coreGeo, coreMat);
+    coreBand.rotation.x = Math.PI * 0.35;
+    coreBand.rotation.z = Math.PI * 0.15;
+    scene.add(coreBand);
+    SPACEDEMO.milkyWayCore = coreBand;
 }

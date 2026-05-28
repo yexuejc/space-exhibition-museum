@@ -101,6 +101,7 @@ var planetData = [
         name:'木星', icon:'♃', realRatio:0.1027, dist:28, color:0xd4a574,
         orbitalPeriod:11.862, rotationPeriod:0.41354,
         L0:34.33479, texType:'jupiter',
+        hasRing:true, ringType:'jupiter',
         info:{ ch:'最大行星，大红斑风暴已持续数百年。',
                en:'Largest planet, Great Red Spot storm for centuries.' },
         sci:{
@@ -146,6 +147,7 @@ var planetData = [
         name:'天王星', icon:'♅', realRatio:0.0367, dist:44, color:0x44aaff,
         orbitalPeriod:84.011, rotationPeriod:-0.71833,
         L0:313.23218, texType:'smooth',
+        hasRing:true, ringType:'uranus',
         info:{ ch:'冰巨星，自转轴几乎与轨道平行，"躺着"转。',
                en:'Ice giant with extreme 98° axial tilt.' },
         sci:{
@@ -168,6 +170,7 @@ var planetData = [
         name:'海王星', icon:'♆', realRatio:0.0356, dist:52, color:0x3344ee,
         orbitalPeriod:164.79, rotationPeriod:0.67125,
         L0:304.88003, texType:'banded',
+        hasRing:true, ringType:'neptune',
         info:{ ch:'最远行星，风速可达2100km/h，太阳系风速最快。',
                en:'Fastest winds in solar system up to 2,100 km/h.' },
         sci:{
@@ -220,6 +223,62 @@ var planetData = [
 planetData.forEach(function(p) {
     p.radius = SUN_RADIUS * Math.pow(p.realRatio, 0.37);
 });
+
+// ===== 矮行星数据（独立数组）=====
+var dwarfPlanetData = [
+    {
+        name:'谷神星', icon:'🌾', realRatio:0.00075, dist:32, color:0xaa9966,
+        orbitalPeriod:4.6, rotationPeriod:0.378,
+        L0:80.0, texType:'crater',
+        isDwarf:true,
+        orbitalInclination: 10.6,
+        orbitalEccentricity: 0.08,
+        radius: SUN_RADIUS * Math.pow(0.00075, 0.37),
+        info:{ ch:'最大的小行星带天体，也是唯一的矮行星。水冰覆盖的表面有亮点盐沉积。',
+               en:'Largest asteroid belt object and the only dwarf planet in the inner solar system.' },
+        sci:{
+            diameter:'940 km',
+            mass:'9.39×10²⁰ kg',
+            gravity:'0.27 m/s²',
+            density:'2.16 g/cm³',
+            temp:'-105°C',
+            atmosphere:'极稀薄水汽',
+            moons:0,
+            auDist:2.77,
+            dayLength:'9.07 小时',
+            yearLength:'4.6 年',
+            axialTilt:'4°',
+            discoverer:'朱塞佩·皮亚齐',
+            discoverYear:'1801'
+        }
+    },
+    {
+        name:'阋神星', icon:'✨', realRatio:0.00218, dist:75, color:0xddddcc,
+        orbitalPeriod:559, rotationPeriod:14.56,
+        L0:215.0, texType:'pluto',
+        isDwarf:true,
+        orbitalInclination: 44.0,
+        orbitalEccentricity: 0.44,
+        radius: SUN_RADIUS * Math.pow(0.00218, 0.37),
+        info:{ ch:'最重的矮行星，位于离散盘区域。发现后导致冥王星被降级为矮行星。',
+               en:'Most massive dwarf planet, located in the scattered disk. Its discovery led to Pluto reclassification.' },
+        sci:{
+            diameter:'2,326 km',
+            mass:'1.66×10²² kg',
+            gravity:'0.82 m/s²',
+            density:'2.52 g/cm³',
+            temp:'-243°C',
+            atmosphere:'间歇性 CH₄ 冰',
+            moons:1,
+            auDist:67.67,
+            dayLength:'14.56 天',
+            yearLength:'559 年',
+            axialTilt:'78°',
+            discoverer:'布朗/特鲁希略/拉比诺维茨',
+            discoverYear:'2005'
+        }
+    }
+];
 
 // ===== 彗星轨道参数 =====
 // 高度椭圆轨道，近日点靠近太阳，远日点远出海王星
