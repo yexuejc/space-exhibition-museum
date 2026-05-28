@@ -218,19 +218,125 @@ function initAmapMap(lookAt, userPos) {
         // 添加用户位置标记
         if (userPos) addUserMarker(userPos);
 
-        // 添加几个太空主题标记点
-        var markers = [
-            { pos: [116.39123, 39.90726], name: '故宫' },
-            { pos: [116.397428, 39.90923], name: '天安门' },
-            { pos: [116.3455, 39.9885], name: '北京航天城' },
-            { pos: [116.397, 39.915], name: '国家博物馆' }
+        // ===== 丰富POI标记（带信息弹窗）=====
+        var pois = [
+            {
+                pos: [116.397428, 39.90923],
+                name: '天安门广场',
+                en: 'Tiananmen Square',
+                icon: '🏛️',
+                desc: '天安门广场是世界上最大的城市广场，是中国的国家象征和重要政治活动场所。',
+                descEn: 'The world\'s largest city square, national symbol of China and venue for major ceremonies.'
+            },
+            {
+                pos: [116.39123, 39.90726],
+                name: '故宫博物院',
+                en: 'The Forbidden City',
+                icon: '🏯',
+                desc: '明清两代的皇家宫殿，是世界上现存规模最大、保存最完整的木质结构古建筑群。',
+                descEn: 'Imperial palace of Ming and Qing dynasties, the world\'s largest and best-preserved wooden palace complex.'
+            },
+            {
+                pos: [116.3455, 39.9885],
+                name: '北京航天城',
+                en: 'Beijing Space City',
+                icon: '🚀',
+                desc: '中国载人航天工程指挥中心和航天员训练基地，中国航天的核心所在地。',
+                descEn: 'China\'s manned space program command center and astronaut training base.'
+            },
+            {
+                pos: [116.397, 39.915],
+                name: '国家博物馆',
+                en: 'National Museum of China',
+                icon: '🏛️',
+                desc: '世界上最大的博物馆之一，展示中华五千年文明史。',
+                descEn: 'One of the world\'s largest museums, showcasing 5,000 years of Chinese civilization.'
+            },
+            {
+                pos: [116.3905, 39.9929],
+                name: '国家体育场（鸟巢）',
+                en: 'Bird\'s Nest Stadium',
+                icon: '🏟️',
+                desc: '2008年北京奥运会主体育场，造型如同鸟巢，是现代建筑奇观。',
+                descEn: 'Main stadium of 2008 Beijing Olympics, designed like a bird\'s nest, a modern architectural wonder.'
+            },
+            {
+                pos: [116.3929, 39.9911],
+                name: '国家游泳中心（水立方）',
+                en: 'Water Cube',
+                icon: '💧',
+                desc: '2008年北京奥运会游泳比赛场馆，独特的泡泡造型设计。',
+                descEn: 'Aquatics venue for 2008 Beijing Olympics, famous for its bubble-shaped design.'
+            },
+            {
+                pos: [116.2349, 40.3451],
+                name: '慕田峪长城',
+                en: 'Mutianyu Great Wall',
+                icon: '🧱',
+                desc: '明代长城的精华段落之一，保存完好，景色壮丽，有\"万里长城慕田峪独秀\"之称。',
+                descEn: 'One of the best-preserved sections of the Ming Great Wall, known for spectacular mountain views.'
+            },
+            {
+                pos: [116.2839, 39.9997],
+                name: '颐和园',
+                en: 'Summer Palace',
+                icon: '🌿',
+                desc: '中国古典园林的巅峰之作，以昆明湖和万寿山为核心，被誉为\"皇家园林博物馆\"。',
+                descEn: 'Masterpiece of Chinese classical garden design, centered on Kunming Lake and Longevity Hill.'
+            },
+            {
+                pos: [116.4434, 39.9048],
+                name: '中国科学技术馆',
+                en: 'China Science & Technology Museum',
+                icon: '🔬',
+                desc: '展示中国科技成就的大型科普教育基地，包含航天、人工智能等主题展厅。',
+                descEn: 'Major science education center showcasing China\'s technological achievements including space and AI.'
+            }
         ];
-        markers.forEach(function(m) {
-            var mk = new AMap.Marker({
-                position: m.pos,
-                title: m.name
+
+        pois.forEach(function(poi) {
+            var markerContent = document.createElement('div');
+            markerContent.style.cssText = 'background:rgba(0,15,40,0.85);border:1px solid rgba(0,200,255,0.3);' +
+                'border-radius:8px;padding:4px 10px;cursor:pointer;' +
+                'backdrop-filter:blur(4px);transition:all 0.2s;' +
+                'box-shadow:0 2px 12px rgba(0,0,0,0.4);';
+            markerContent.innerHTML = '<span style="font-size:16px;">' + poi.icon + '</span> ' +
+                '<span style="color:#00ddff;font-size:12px;">' + poi.name + '</span>';
+
+            var marker = new AMap.Marker({
+                position: poi.pos,
+                content: markerContent,
+                offset: new AMap.Pixel(-50, -15)
             });
-            mapInstance.add(mk);
+            mapInstance.add(marker);
+
+            // 信息弹窗
+            var infoWin = new AMap.InfoWindow({
+                content: '<div style="background:rgba(0,10,30,0.95);border:1px solid rgba(0,200,255,0.25);' +
+                    'border-radius:12px;padding:14px 18px;max-width:260px;' +
+                    'backdrop-filter:blur(8px);">' +
+                    '<div style="font-size:22px;margin-bottom:4px;">' + poi.icon + '</div>' +
+                    '<div style="color:#00ddff;font-size:15px;font-weight:600;margin-bottom:2px;">' + poi.name + '</div>' +
+                    '<div style="color:#556677;font-size:11px;margin-bottom:6px;">' + poi.en + '</div>' +
+                    '<div style="color:#99aabb;font-size:12px;line-height:1.5;">' + poi.desc + '</div>' +
+                    '</div>',
+                offset: new AMap.Pixel(0, -30),
+                size: new AMap.Size(0, 0)
+            });
+
+            marker.on('click', function() {
+                infoWin.open(mapInstance, marker.getPosition());
+            });
+
+            // 鼠标移入移出效果
+            markerContent.onmouseover = function() {
+                this.style.borderColor = 'rgba(0,200,255,0.6)';
+                this.style.background = 'rgba(0,25,60,0.9)';
+            };
+            markerContent.onmouseout = function() {
+                this.style.borderColor = 'rgba(0,200,255,0.3)';
+                this.style.background = 'rgba(0,15,40,0.85)';
+            };
         });
 
         // 类型切换按钮
@@ -269,11 +375,14 @@ function setupMapTypeSwitcher() {
     var typeSwitch = document.createElement('div');
     typeSwitch.style.cssText = 'position:absolute;bottom:30px;right:20px;z-index:3003;' +
         'display:flex;gap:6px;';
+
+    var currentLayer = null; // 当前激活的自定义图层
     var layers = [
         { name: '标准', layer: null },
         { name: '卫星', layer: new AMap.TileLayer.Satellite() },
         { name: '路网', layer: new AMap.TileLayer.RoadNet() }
     ];
+
     layers.forEach(function(l, idx) {
         var btn = document.createElement('button');
         btn.textContent = l.name;
@@ -281,17 +390,43 @@ function setupMapTypeSwitcher() {
             'border:1px solid rgba(0,200,255,0.3);color:#00ddff;padding:4px 12px;border-radius:6px;' +
             'cursor:pointer;font-size:12px;transition:all 0.2s;';
         btn.onmouseover = function() { this.style.background = 'rgba(0,200,255,0.2)'; };
-        btn.onmouseout = function() { this.style.background = l.idx === 0 && true ? 'rgba(0,200,255,0.3)' : 'rgba(0,10,30,0.7)'; };
+        btn.onmouseout = function() {
+            this.style.background = this === btnActiveRef ? 'rgba(0,200,255,0.3)' : 'rgba(0,10,30,0.7)';
+        };
+        var btnActiveRef = btn; // 闭包引用
         btn.onclick = function() {
-            mapInstance.setLayers(l.layer ? [l.layer] : []);
-            document.querySelectorAll('#mapContainer > div > button').forEach(function(b) {
+            // 清除之前的自定义图层
+            if (currentLayer) {
+                mapInstance.remove(currentLayer);
+                currentLayer = null;
+            }
+            // 添加新图层（null表示标准底图无需额外图层）
+            if (l.layer) {
+                mapInstance.add(l.layer);
+                currentLayer = l.layer;
+            }
+            // 更新按钮样式
+            typeSwitch.querySelectorAll('button').forEach(function(b) {
                 b.style.background = 'rgba(0,10,30,0.7)';
             });
-            btn.style.background = 'rgba(0,200,255,0.3)';
+            this.style.background = 'rgba(0,200,255,0.3)';
         };
         typeSwitch.appendChild(btn);
     });
     mapDom.appendChild(typeSwitch);
+
+    // 比例尺控件
+    var scale = new AMap.Scale();
+    mapInstance.addControl(scale);
+
+    // 工具条（缩放+定位）
+    var toolbar = new AMap.ToolBar({
+        position: 'LT',           // 左上角
+        offset: new AMap.Pixel(16, 60),
+        ruler: true,
+        noIpLocate: true
+    });
+    mapInstance.addControl(toolbar);
 }
 
 function showMapTip() {
@@ -300,7 +435,7 @@ function showMapTip() {
         'z-index:3003;color:#556677;font-size:11px;text-align:center;' +
         'background:rgba(0,10,30,0.6);padding:4px 14px;border-radius:8px;' +
         'pointer-events:none;transition:opacity 0.5s;';
-    tip.textContent = '🖱️ 缩小至全市/省范围自动返回太空';
+    tip.textContent = '🖱️ 缩小至全市/省范围自动返回太空 · 滚轮缩放 · 拖拽移动';
     mapDom.appendChild(tip);
     setTimeout(function() { tip.style.opacity = '0.4'; }, 3000);
 }
