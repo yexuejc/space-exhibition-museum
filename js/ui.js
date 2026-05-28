@@ -1,6 +1,175 @@
 // ===== 太空探索博物馆 - 界面交互模块 =====
 // 行星信息卡片、标签切换、全屏沉浸、聚焦动画、缩放滑块、时间控制
 
+// ===== 音频解说 =====
+var speechSynth = window.speechSynthesis;
+var speechUtterance = null;
+var speechQueue = [];    // 待播放文本队列
+var isSpeaking = false;
+var currentSpeechPlanet = '';
+
+// 行星解说文本（中英双语）
+var planetNarration = {
+    '水星': {
+        zh: '水星是太阳系中最小且离太阳最近的行星。表面布满陨石坑，酷似月球。白天温度高达430度，夜晚骤降到零下180度。水星没有大气层保护，是太阳系中最极端的环境之一。公转周期仅88天，是八大行星中速度最快的。',
+        en: 'Mercury is the smallest and closest planet to the Sun. Its cratered surface resembles our Moon. Daytime temperatures soar to 430 degrees Celsius, while nights plunge to minus 180 degrees. With no atmosphere, Mercury is one of the most extreme environments in our solar system.'
+    },
+    '金星': {
+        zh: '金星是太阳系中最热的行星，表面温度高达470度。浓厚的二氧化碳大气层产生了强烈的温室效应。金星自转方向与其他行星相反，是太阳系中最慢的自转，一天比一年还长。古代中国人称它为启明星或长庚星。',
+        en: 'Venus is the hottest planet in our solar system, with surface temperatures reaching 470 degrees Celsius. Its thick carbon dioxide atmosphere creates a runaway greenhouse effect. Venus rotates backwards and has the slowest rotation of any planet.'
+    },
+    '地球': {
+        zh: '地球是太阳系中唯一已知存在生命的行星。液态水覆盖了约百分之七十一的表面，大气中含有丰富的氮气和氧气。地球有一个巨大的月球作为卫星，潮汐力稳定了地轴倾角，创造了稳定的气候。请在欣赏太空美景的同时，珍惜我们唯一的家园。',
+        en: 'Earth is the only planet known to harbor life. Liquid water covers about 71 percent of its surface. Its atmosphere is rich in nitrogen and oxygen. Earth\'s large Moon stabilizes its axial tilt, creating a stable climate for life to flourish.'
+    },
+    '火星': {
+        zh: '火星被称为红色星球，表面富含氧化铁。它拥有太阳系中最高大的山峰——奥林匹斯山，高达21.9公里，以及最大的峡谷——水手号峡谷。科学家们正在积极探索火星上是否存在过生命。人类计划在本世纪内登陆火星。',
+        en: 'Mars, known as the Red Planet, is rich in iron oxide on its surface. It boasts Olympus Mons, the tallest mountain in the solar system at 21.9 kilometers, and Valles Marineris, the largest canyon. Scientists are actively searching for signs of past life on Mars.'
+    },
+    '木星': {
+        zh: '木星是太阳系中最大的行星，质量是其他所有行星总和的2.5倍。大红斑是一个持续了数百年的巨型风暴，比地球还要大。木星拥有79颗已知卫星，其中木卫二欧罗巴被认为是寻找地外生命最有希望的地方之一。',
+        en: 'Jupiter is the largest planet in our solar system, with a mass 2.5 times that of all other planets combined. The Great Red Spot is a giant storm that has raged for hundreds of years. Jupiter has 79 known moons, with Europa considered a promising candidate for extraterrestrial life.'
+    },
+    '土星': {
+        zh: '土星以其壮观的环系统闻名于世。土星环主要由冰粒和岩石碎片组成，宽度约28万公里，厚度却只有几十米。土星的密度比水还小，如果有足够大的海洋，它将漂浮起来。土卫六泰坦是太阳系中唯一拥有浓厚大气层的卫星。',
+        en: 'Saturn is famous for its spectacular ring system, made primarily of ice particles and rocky debris. The rings span about 280,000 kilometers but are only tens of meters thick. Saturn\'s density is less than water — it would float in a large enough ocean.'
+    },
+    '天王星': {
+        zh: '天王星是一个侧躺着公转的冰巨星，自转轴几乎与轨道面平行，倾斜角达97.8度。它的蓝绿色来自大气中的甲烷。天王星是第一颗通过望远镜发现的行星，由威廉·赫歇尔在1781年发现。它有27颗已知卫星。',
+        en: 'Uranus is an ice giant that rotates on its side, with an axial tilt of 97.8 degrees. Its blue-green color comes from methane in its atmosphere. Uranus was the first planet discovered with a telescope, found by William Herschel in 1781.'
+    },
+    '海王星': {
+        zh: '海王星是太阳系中距太阳最远的行星，也是风速最快的行星，风速可达每小时2100公里。它鲜艳的蓝色来自大气中的甲烷。海王星是唯一通过数学计算而非直接观测被发现的行星。它的卫星海卫一正沿着螺旋轨道缓慢接近行星。',
+        en: 'Neptune is the farthest planet from the Sun and has the fastest winds in the solar system, reaching 2,100 kilometers per hour. Its vivid blue color comes from methane. Neptune was the first planet discovered through mathematical prediction rather than direct observation.'
+    },
+    '冥王星': {
+        zh: '冥王星曾经是第九大行星，2006年被重新分类为矮行星。它位于柯伊伯带，表面有标志性的心形区域——汤博区。冥王星有5颗卫星，其中最大的卡戎与冥王星组成了双矮行星系统。新视野号探测器于2015年首次飞掠冥王星。',
+        en: 'Pluto was once the ninth planet but was reclassified as a dwarf planet in 2006. Located in the Kuiper Belt, it features a famous heart-shaped region called Tombaugh Regio. The New Horizons spacecraft made humanity\'s first flyby of Pluto in 2015.'
+    },
+    '谷神星': {
+        zh: '谷神星是小行星带中最大的天体，也是唯一一颗位于小行星带的矮行星。它的直径约950公里，表面可能存在水冰。谷神星在1801年被发现，是首个被发现的小行星。黎明号探测器在2015年抵达谷神星。',
+        en: 'Ceres is the largest object in the asteroid belt and the only dwarf planet located there. About 950 kilometers in diameter, its surface may contain water ice. Discovered in 1801, it was the first asteroid ever found.'
+    },
+    '阋神星': {
+        zh: '阋神星是太阳系中质量最大的矮行星，比冥王星还要重约百分之二十七。它位于遥远的离散盘区域，公转周期约557年。阋神星的发现直接导致了冥王星被重新分类为矮行星。',
+        en: 'Eris is the most massive dwarf planet in our solar system, about 27 percent more massive than Pluto. Located in the scattered disc region, its orbital period is about 557 years. Its discovery led directly to Pluto\'s reclassification as a dwarf planet.'
+    },
+    '月球': {
+        zh: '月球是地球唯一的天然卫星，也是人类唯一步足踏上的地外天体。月球表面布满陨石坑，没有大气层和水。潮汐锁定使月球始终以同一面朝向地球。月球的引力潮汐影响着地球的海洋。',
+        en: 'The Moon is Earth\'s only natural satellite and the only celestial body humans have set foot on. Its surface is covered with craters. Tidal locking keeps the same face toward Earth, and its gravity creates our ocean tides.'
+    },
+    '哈雷彗星': {
+        zh: '哈雷彗星是最著名的周期性彗星，大约每75到76年回归一次。最近一次回归在1986年，下一次预计在2061年。彗星由冰、尘埃和岩石组成，靠近太阳时形成明亮的彗尾。爱德蒙·哈雷在1705年预言了它的回归。',
+        en: 'Halley\'s Comet is the most famous periodic comet, returning every 75 to 76 years. Its last visit was in 1986, and it will return in 2061. Made of ice, dust, and rock, it forms a bright tail when approaching the Sun.'
+    }
+};
+
+// 语音解说引擎
+function toggleSpeech() {
+    if (!window.speechSynthesis) return;
+    if (isSpeaking && speechSynth.speaking) {
+        if (speechSynth.paused) {
+            resumeSpeech();
+        } else {
+            pauseSpeech();
+        }
+    } else if (window._lastCardData) {
+        speakPlanet(window._lastCardData);
+    }
+}
+function speakPlanet(planetData) {
+    if (!window.speechSynthesis) return;
+    var name = planetData.name || '';
+    var narration = planetNarration[name];
+    if (!narration) return;
+
+    var text = currentLang === 'zh' ? narration.zh : narration.en;
+    if (!text) text = narration.zh || narration.en || '';
+
+    // 如果正在播同一行星则继续，不同则重新开始
+    if (isSpeaking && currentSpeechPlanet === name) return;
+
+    // 停止之前的语音
+    if (speechSynth.speaking) {
+        speechSynth.cancel();
+    }
+
+    currentSpeechPlanet = name;
+    speechUtterance = new SpeechSynthesisUtterance(text);
+    speechUtterance.lang = currentLang === 'zh' ? 'zh-CN' : 'en-US';
+    speechUtterance.rate = 0.9;
+    speechUtterance.pitch = 1.0;
+    speechUtterance.volume = 0.8;
+
+    isSpeaking = true;
+    speechUtterance.onend = function() {
+        isSpeaking = false;
+        updateSpeechBtn('idle');
+    };
+    speechUtterance.onerror = function() {
+        isSpeaking = false;
+        updateSpeechBtn('idle');
+    };
+
+    speechSynth.speak(speechUtterance);
+    updateSpeechBtn('playing');
+    updateSpeechBar(name);
+}
+
+function pauseSpeech() {
+    if (!window.speechSynthesis) return;
+    if (speechSynth.speaking && !speechSynth.paused) {
+        speechSynth.pause();
+        updateSpeechBtn('paused');
+    }
+}
+
+function resumeSpeech() {
+    if (!window.speechSynthesis) return;
+    if (speechSynth.paused) {
+        speechSynth.resume();
+        updateSpeechBtn('playing');
+    }
+}
+
+function stopSpeech() {
+    if (!window.speechSynthesis) return;
+    if (speechSynth.speaking) {
+        speechSynth.cancel();
+    }
+    isSpeaking = false;
+    currentSpeechPlanet = '';
+    updateSpeechBtn('idle');
+}
+
+function updateSpeechBtn(state) {
+    var btn = document.getElementById('speechBtn');
+    if (!btn) return;
+    if (state === 'playing') {
+        btn.textContent = '⏸';
+        btn.style.color = '#00ddff';
+    } else if (state === 'paused') {
+        btn.textContent = '▶';
+        btn.style.color = '#ff8800';
+    } else {
+        btn.textContent = '🔈';
+        btn.style.color = '#667788';
+    }
+}
+
+function updateSpeechBar(name) {
+    var bar = document.getElementById('speechBar');
+    if (!bar) return;
+    var narration = planetNarration[name];
+    if (!narration) return;
+    var text = currentLang === 'zh' ? narration.zh : narration.en;
+    if (!text) text = narration.zh;
+
+    // 截取前50字
+    var snippet = text.substring(0, 50) + (text.length > 50 ? '…' : '');
+    bar.textContent = '🔊 ' + snippet;
+}
+
 // ===== i18n 多语言 =====
 var currentLang = 'zh'; // 'zh' 或 'en'
 var i18n = {
@@ -149,13 +318,25 @@ function updateUILanguage() {
             '<p id="cardDesc" style="margin:0;color:#8899aa;font-size:13px;line-height:1.6;"></p>' +
         '</div>' +
         // 科学数据面板
-        '<div id="cardSciData" style="padding:4px 20px 16px;"></div>';
+        '<div id="cardSciData" style="padding:4px 20px 16px;"></div>' +
+        // 语音控制条
+        '<div style="display:flex;align-items:center;gap:8px;padding:6px 20px 12px;border-top:1px solid rgba(0,200,255,0.08);">' +
+            '<span id="speechBtn" style="color:#667788;cursor:pointer;font-size:16px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:50%;transition:all 0.2s;" ' +
+            'title="播放解说" ' +
+            'onmouseover="this.style.background=\'rgba(0,200,255,0.1)\'" ' +
+            'onmouseout="this.style.background=\'transparent\'" ' +
+            'onclick="toggleSpeech()">🔈</span>' +
+            '<span id="speechBar" style="flex:1;color:#556677;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;" ' +
+            'title="点击播放/暂停解说" onclick="toggleSpeech()">🔊 点击播放解说</span>' +
+        '</div>';
     document.body.appendChild(card);
 
     // 全局关闭函数
     if (typeof hidePlanetCard === 'undefined') {
         window.hidePlanetCard = function() {
             document.getElementById('planetCard').style.bottom = '-500px';
+            // 关闭卡片时自动停止语音
+            stopSpeech();
         };
     }
 
@@ -191,6 +372,12 @@ function updateUILanguage() {
         // 语音解说
         if (typeof speakPlanet === 'function') {
             speakPlanet(p);
+        }
+        // 更新语音条文本（语言切换时）
+        var sb = document.getElementById('speechBar');
+        if (sb && planetNarration[p.name]) {
+            var nt = currentLang === 'zh' ? planetNarration[p.name].zh : planetNarration[p.name].en;
+            if (nt) sb.textContent = '🔊 ' + nt.substring(0, 50) + (nt.length > 50 ? '…' : '');
         }
     };
 
