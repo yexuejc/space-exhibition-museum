@@ -50,16 +50,17 @@ function buildSolarSystem() {
     controls.target.set(0, 0, 0);
     SPACEDEMO.controls = controls;
 
-    // ===== 环境光与点光源 =====
-    var ambient = new THREE.AmbientLight(0x222244, 0.4);
+    // ===== 环境光与点光源（昼夜模式）=====
+    // 低环境光 + 强太阳光 = 自然日/夜面效果
+    var ambient = new THREE.AmbientLight(0x222244, 0.15);
     scene.add(ambient);
-    var sunLight = new THREE.PointLight(0xffffff, 2.5, 500);
+    var sunLight = new THREE.PointLight(0xffffff, 3.5, 500);
     sunLight.position.set(0, 0, 0);
     sunLight.castShadow = true;
     scene.add(sunLight);
-    var rimLight = new THREE.DirectionalLight(0x4488ff, 0.3);
-    rimLight.position.set(-50, 50, 50);
-    scene.add(rimLight);
+    // 微弱的背光补光，避免背光面全黑
+    var fillLight = new THREE.HemisphereLight(0x224488, 0x001122, 0.3);
+    scene.add(fillLight);
 
     // ===== 星空背景（Three.js 粒子）=====
     var starCount = 3000;

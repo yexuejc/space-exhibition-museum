@@ -28,6 +28,10 @@
         document.getElementById('cardDesc').textContent = p.info.ch;
         document.getElementById('cardEnDesc').textContent = p.info.en;
         card.style.bottom = '20px';
+        // 语音解说
+        if (typeof speakPlanet === 'function') {
+            speakPlanet(p);
+        }
     };
 })();
 
@@ -111,6 +115,8 @@ function focusOnPlanet(planetEntry) {
     // 隐藏提示栏
     var tipBar = document.getElementById('tipBar');
     if (tipBar) tipBar.style.opacity = '0';
+    // 导航高亮
+    if (typeof highlightNav === 'function') highlightNav(planetEntry.data.name);
 }
 
 function resetFocus() {
@@ -129,6 +135,8 @@ function resetFocus() {
     if (slider) slider.value = sliderVal;
     var tipBar = document.getElementById('tipBar');
     if (tipBar) tipBar.style.opacity = '1';
+    // 清除导航高亮
+    if (typeof clearNavHighlight === 'function') clearNavHighlight();
 }
 
 // ===== 缩放滑块 =====
@@ -296,6 +304,14 @@ function setupInteractionEvents() {
         var intersects = raycaster.intersectObjects(SPACEDEMO.clickables);
         if (intersects.length > 0) {
             var hit = intersects[0].object;
+            // 星座点击检测
+            if (hit.userData && hit.userData.isConstellation) {
+                if (typeof showConstellationInfo === 'function') {
+                    showConstellationInfo(hit.userData.constellationIdx);
+                }
+                return;
+            }
+            // 行星点击检测
             if (hit.userData && hit.userData.name) {
                 SPACEDEMO.planets.forEach(function(p) {
                     if (p.data.name === hit.userData.name) {

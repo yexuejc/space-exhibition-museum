@@ -20,7 +20,10 @@ function initVR() {
     // 3. 创建卫星系统
     createMoons();
 
-    // 4. 启动时间引擎
+    // 4. 创建星座
+    createConstellations();
+
+    // 5. 启动时间引擎
     initTimeEngine();
 
     // 5. 设置 UI 交互
@@ -29,8 +32,10 @@ function initVR() {
     setupZoomSlider();
     setupTimeControls();
     setupTipBar();
+    setupNavigationPanel();
     setupInteractionEvents();
     setupResizeHandler();
+    setupSpeechControl();
 
     // 6. 设置地图模式
     setupMapModeButton();
