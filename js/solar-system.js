@@ -735,7 +735,7 @@ function buildSolarSystem() {
         var dotTexture = new THREE.CanvasTexture(canvas);
 
         var tailMat = new THREE.PointsMaterial({
-            size: 1.5,
+            size: 1.0,
             map: dotTexture,
             transparent: true,
             blending: THREE.AdditiveBlending,
