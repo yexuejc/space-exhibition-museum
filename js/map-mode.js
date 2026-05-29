@@ -100,7 +100,7 @@ function openMapMode() {
         .forEach(function(el) {
             if (el) el.style.display = 'none';
         });
-    document.getElementById('planetCard').style.bottom = '-400px';
+    document.getElementById('planetCard').style.bottom = '-1500px';
 
     // 添加淡入动画
     if (!document.getElementById('mapFadeStyle')) {

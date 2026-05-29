@@ -206,7 +206,7 @@ function showConstellationInfo(ci) {
     if (!constellationCard) {
         constellationCard = document.createElement('div');
         constellationCard.id = 'constellationCard';
-        constellationCard.style.cssText = 'position:fixed;bottom:-400px;left:50%;transform:translateX(-50%);' +
+        constellationCard.style.cssText = 'position:fixed;bottom:-1500px;left:50%;transform:translateX(-50%);' +
             'background:rgba(0,10,30,0.94);border:1px solid rgba(100,200,255,0.3);border-radius:16px;' +
             'padding:20px 28px;z-index:2100;transition:bottom 0.5s cubic-bezier(0.34,1.56,0.64,1);' +
             'backdrop-filter:blur(12px);max-width:480px;width:90%;' +
@@ -221,7 +221,7 @@ function showConstellationInfo(ci) {
             '<span style="position:absolute;top:8px;right:12px;color:#445566;cursor:pointer;font-size:16px;" onclick="hideConstellationCard()">✕</span>';
         document.body.appendChild(constellationCard);
         window.hideConstellationCard = function() {
-            constellationCard.style.bottom = '-400px';
+            constellationCard.style.bottom = '-1500px';
             // 恢复连线透明度
             constellationLines.forEach(function(line) {
                 line.material.opacity = 0.35;

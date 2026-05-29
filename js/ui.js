@@ -292,7 +292,7 @@ function updateUILanguage() {
 (function initCard() {
     var card = document.createElement('div');
     card.id = 'planetCard';
-    card.style.cssText = 'position:fixed;bottom:-500px;left:50%;transform:translateX(-50%);' +
+    card.style.cssText = 'position:fixed;bottom:-1500px;left:50%;transform:translateX(-50%);' +
         'background:rgba(0,8,25,0.95);border:1px solid rgba(0,200,255,0.25);border-radius:18px;' +
         'padding:0;z-index:2000;transition:bottom 0.5s cubic-bezier(0.34,1.56,0.64,1);' +
         'backdrop-filter:blur(16px);max-width:460px;width:92%;' +
@@ -334,7 +334,8 @@ function updateUILanguage() {
     // 全局关闭函数
     if (typeof hidePlanetCard === 'undefined') {
         window.hidePlanetCard = function() {
-            document.getElementById('planetCard').style.bottom = '-500px';
+            var c = document.getElementById('planetCard');
+            if (c) c.style.bottom = '-1500px';
             // 关闭卡片时自动停止语音
             stopSpeech();
         };
@@ -499,7 +500,7 @@ function setupLangToggle() {
         updateUILanguage();
         // 如果当前有显示信息卡片，刷新它
         var card = document.getElementById('planetCard');
-        if (card && card.style.bottom !== '-500px') {
+        if (card && card.style.bottom !== '-1500px') {
             // 触发重新显示（通过已存储的数据）
             if (window._lastCardData) showPlanetCard(window._lastCardData);
         }
