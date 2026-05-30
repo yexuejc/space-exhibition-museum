@@ -898,27 +898,45 @@ function setupTipBar() {
 function setupInteractionEvents() {
     var raycaster = new THREE.Raycaster();
     var mouse = new THREE.Vector2();
-    var lastClickTime = 0;
-    var lastClickPos = { x: 0, y: 0 };
+    var lastTapTime = 0;
+    var lastTapPos = { x: 0, y: 0 };
 
-    SPACEDEMO.renderer.domElement.addEventListener('click', function(event) {
+    // 统一触控/鼠标位置获取
+    function getPointerPos(event) {
+        var clientX, clientY;
+        if (event.touches) {
+            clientX = event.touches[0].clientX;
+            clientY = event.touches[0].clientY;
+        } else if (event.changedTouches) {
+            clientX = event.changedTouches[0].clientX;
+            clientY = event.changedTouches[0].clientY;
+        } else {
+            clientX = event.clientX;
+            clientY = event.clientY;
+        }
+        return { x: clientX, y: clientY };
+    }
+
+    // 核心交互处理（单击/双击检测 → 射线检测 → 动作分发）
+    function handlePointer(event) {
+        var pos = getPointerPos(event);
         var now = Date.now();
         var rect = SPACEDEMO.renderer.domElement.getBoundingClientRect();
-        var mx = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-        var my = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+        var mx = ((pos.x - rect.left) / rect.width) * 2 - 1;
+        var my = -((pos.y - rect.top) / rect.height) * 2 + 1;
 
-        // 检测双击
-        var timeDelta = now - lastClickTime;
+        // 双击检测（400ms + 10px 容差）
+        var timeDelta = now - lastTapTime;
         var distDelta = Math.sqrt(
-            Math.pow(event.clientX - lastClickPos.x, 2) +
-            Math.pow(event.clientY - lastClickPos.y, 2)
+            Math.pow(pos.x - lastTapPos.x, 2) +
+            Math.pow(pos.y - lastTapPos.y, 2)
         );
-        lastClickTime = now;
-        lastClickPos.x = event.clientX;
-        lastClickPos.y = event.clientY;
+        lastTapTime = now;
+        lastTapPos.x = pos.x;
+        lastTapPos.y = pos.y;
 
         if (timeDelta < 400 && distDelta < 10) {
-            // 双击
+            // ===== 双击 =====
             mouse.x = mx; mouse.y = my;
             raycaster.setFromCamera(mouse, SPACEDEMO.camera);
             var intersects = raycaster.intersectObjects(SPACEDEMO.clickables);
@@ -944,7 +962,6 @@ function setupInteractionEvents() {
                         if (SPACEDEMO.focusedPlanet && SPACEDEMO.focusedPlanet.data && SPACEDEMO.focusedPlanet.data.name === '月球') {
                             resetFocus();
                         } else {
-                            // 为月球构建临时聚焦对象
                             var moonFocus = {
                                 mesh: SPACEDEMO.moonMesh,
                                 data: { name:'月球', radius:0.28 }
@@ -961,7 +978,7 @@ function setupInteractionEvents() {
             return;
         }
 
-        // 单击
+        // ===== 单击 =====
         mouse.x = mx; mouse.y = my;
         raycaster.setFromCamera(mouse, SPACEDEMO.camera);
         var intersects = raycaster.intersectObjects(SPACEDEMO.clickables);
@@ -988,15 +1005,12 @@ function setupInteractionEvents() {
                 // 单击月球
                 if (!found && hit.userData.isMoon && window.moonSciData) {
                     showPlanetCard(window.moonSciData);
-                    // 在信息卡片上追加月相信息
                     var moonPhaseEl = document.createElement('div');
                     moonPhaseEl.id = 'moonPhaseInfo';
                     moonPhaseEl.style.cssText = 'text-align:center;font-size:13px;color:#88bbdd;padding:4px 0 8px;';
                     var cardSci = document.getElementById('cardSciData');
                     if (cardSci) {
-                        // 插入月相信息
                         var phaseText = typeof moonPhaseName !== 'undefined' ? moonPhaseName : '🌑 新月';
-                        // 英文模式时使用 i18n 月相名
                         if (currentLang === 'en' && typeof moonPhaseAngle !== 'undefined') {
                             var phaseEn = i18n.en.phaseNames;
                             var a = moonPhaseAngle % (Math.PI * 2);
@@ -1031,7 +1045,37 @@ function setupInteractionEvents() {
                 }
             }
         }
+    }
+
+    // ---- 桌面端：click 事件（移动端触发的 click 被标记跳过） ----
+    var isTouchTap = false;
+    var touchStartPos = { x: 0, y: 0 };
+    SPACEDEMO.renderer.domElement.addEventListener('click', function(event) {
+        // 移动端 touchend 已处理，跳过后续 click
+        if (isTouchTap) { isTouchTap = false; return; }
+        handlePointer(event);
     });
+
+    // ---- 移动端：touch 事件（阻止浏览器默认双击缩放） ----
+    // touchstart：记录触摸起点，用于区分拖拽与点击
+    SPACEDEMO.renderer.domElement.addEventListener('touchstart', function(event) {
+        if (event.changedTouches.length !== 1) return;
+        touchStartPos.x = event.changedTouches[0].clientX;
+        touchStartPos.y = event.changedTouches[0].clientY;
+    }, { passive: true });
+
+    // touchend：仅当手指未明显移动（< 15px）时视为点击/双击
+    SPACEDEMO.renderer.domElement.addEventListener('touchend', function(event) {
+        if (event.changedTouches.length !== 1) return;
+        event.preventDefault(); // 阻止双击缩放/滚动
+        // 计算触摸移动距离，超过 15px 视为拖拽而非点击
+        var dx = event.changedTouches[0].clientX - touchStartPos.x;
+        var dy = event.changedTouches[0].clientY - touchStartPos.y;
+        var moved = Math.sqrt(dx * dx + dy * dy);
+        if (moved > 15) return; // 拖拽旋转，不触发点击
+        isTouchTap = true;
+        handlePointer(event);
+    }, { passive: false });
 
     // ESC 退出聚焦 / 退出漫游
     document.addEventListener('keydown', function(e) {

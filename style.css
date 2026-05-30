@@ -10,6 +10,11 @@ html, body {
 }
 body { position: relative; }
 
+/* 3D 场景容器 - 阻止浏览器默认触控手势（双击缩放等） */
+#vrContainer, #vrContainer canvas {
+    touch-action: none;
+}
+
 /* Header */
 header {
     text-align: center;
