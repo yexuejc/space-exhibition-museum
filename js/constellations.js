@@ -3,6 +3,10 @@
 // 单击星座区域 → 显示轮廓 + 神话故事
 
 // 星座数据：坐标在 3D 场景中的世界位置（相机默认看向方向）
+(function(SPACEDEMO, win, doc, THREE, undefined) {
+    "use strict";
+
+
 var constellationData = [{
     name: '北斗七星',
     en: 'Big Dipper',
@@ -260,3 +264,13 @@ function setupConstellationClick(mouse, raycaster) {
     }
     return false;
 }
+
+
+    // 公开接口
+    SPACEDEMO.createConstellations = createConstellations;
+    win.createConstellations = createConstellations;
+    SPACEDEMO.showConstellationInfo = showConstellationInfo;
+    win.showConstellationInfo = showConstellationInfo;
+    SPACEDEMO.setupConstellationClick = setupConstellationClick;
+    win.setupConstellationClick = setupConstellationClick;
+})(window.SPACEDEMO || (window.SPACEDEMO = {}), window, document, window.THREE);

@@ -1,6 +1,10 @@
 // ===== 太空探索博物馆 - 卫星系统 =====
 // 地球的月球（含月相）+ 木星四大卫星（伽利略卫星）
 
+(function(SPACEDEMO, win, doc, THREE, undefined) {
+    "use strict";
+
+
 var moonObjects = [];
 var moonPhaseAngle = 0; // 月相角度（0~2PI）
 var moonPhaseName = ''; // 月相中文名
@@ -347,3 +351,19 @@ function updateMoons() {
         }
     }
 }
+
+
+    // 公开接口
+    SPACEDEMO.createMoons = createMoons;
+    win.createMoons = createMoons;
+    SPACEDEMO.updateMoons = updateMoons;
+    win.updateMoons = updateMoons;
+    SPACEDEMO.getMoonPhaseName = getMoonPhaseName;
+    win.getMoonPhaseName = getMoonPhaseName;
+    SPACEDEMO.moonSciData = moonSciData;
+    win.moonSciData = moonSciData;
+    SPACEDEMO.moonPhaseAngle = moonPhaseAngle;
+    win.moonPhaseAngle = moonPhaseAngle;
+    SPACEDEMO.moonPhaseName = moonPhaseName;
+    win.moonPhaseName = moonPhaseName;
+})(window.SPACEDEMO || (window.SPACEDEMO = {}), window, document, window.THREE);

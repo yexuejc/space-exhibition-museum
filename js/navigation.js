@@ -1,6 +1,10 @@
 // ===== 太空探索博物馆 - 行星导航面板 =====
 // 左侧行星列表，点击直接飞过去
 
+(function(SPACEDEMO, win, doc, THREE, undefined) {
+    "use strict";
+
+
 function setupNavigationPanel() {
     var panel = document.createElement('div');
     panel.id = 'navPanel';
@@ -91,3 +95,13 @@ function clearNavHighlight() {
         el.style.borderLeftColor = 'transparent';
     });
 }
+
+
+    // 公开接口
+    SPACEDEMO.setupNavigationPanel = setupNavigationPanel;
+    win.setupNavigationPanel = setupNavigationPanel;
+    SPACEDEMO.highlightNav = highlightNav;
+    win.highlightNav = highlightNav;
+    SPACEDEMO.clearNavHighlight = clearNavHighlight;
+    win.clearNavHighlight = clearNavHighlight;
+})(window.SPACEDEMO || (window.SPACEDEMO = {}), window, document, window.THREE);

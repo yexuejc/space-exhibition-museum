@@ -32,6 +32,11 @@
     <section id="solarSystemVR" class="vrExhibit">
         <h2>🌠 太阳系实时模拟</h2>
         <div id="vrContainer">
+            <!-- 加载指示器（JS 初始化完成后自动隐藏，初始隐藏，点击进入时显示） -->
+            <div id="loadingIndicator" style="display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;z-index:10;pointer-events:none;">
+                <div style="width:60px;height:60px;margin:0 auto 16px;border:3px solid rgba(0,200,255,0.2);border-top-color:#00ddff;border-radius:50%;animation:spin 1s linear infinite;"></div>
+                <p style="color:rgba(255,255,255,0.7);font-size:16px;">🌌 正在加载宇宙…</p>
+            </div>
             <!-- Three.js 场景由 js 模块动态构建 -->
         </div>
         <div class="vr-controls">
@@ -103,7 +108,7 @@
     <script src="js/constellations.js"></script>
     <script src="js/meteors.js"></script>
     <script src="js/navigation.js"></script>
-    <script src="js/speech.js"></script>
+    <!-- 语音解说已集成到 ui.js 中，移除旧版 speech.js -->
     <script src="js/map-mode.js"></script>
     <script src="js/app.js"></script>
 </body>

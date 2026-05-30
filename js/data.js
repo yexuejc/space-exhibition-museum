@@ -219,12 +219,9 @@ var planetData = [
     }
 ];
 
-// 计算视觉压缩后的半径
-planetData.forEach(function(p) {
-    p.radius = SUN_RADIUS * Math.pow(p.realRatio, 0.37);
-});
+// 计算视觉压缩后的半径（等矮行星数据定义完再做）
 
-// ===== 矮行星数据（独立数组）=====
+// ===== 矮行星数据 =====
 var dwarfPlanetData = [
     {
         name:'谷神星', icon:'🌾', realRatio:0.00075, dist:32, color:0xaa9966,
@@ -316,3 +313,28 @@ var cometData = {
         discoverYear:'1705（哈雷）'
     }
 };
+
+// ===== 统一处理（在所有天体数据定义完成后执行）=====
+
+// 1. 计算所有天体的视觉压缩半径
+planetData.forEach(function(p) {
+    p.radius = SUN_RADIUS * Math.pow(p.realRatio, 0.37);
+});
+
+// 2. 为所有天体补全 type 标记
+planetData.forEach(function(p) {
+    if (!p.type) p.type = p.isDwarf ? 'dwarf' : 'planet';
+});
+dwarfPlanetData.forEach(function(p) {
+    p.type = 'dwarf';
+});
+if (typeof cometData !== 'undefined') {
+    cometData.type = 'comet';
+    cometData.radius = 0.6; // 确保 radius 存在
+}
+
+// 3. 全量天体数据列表（用于统一循环处理单击/双击/轨道更新）
+SPACEDEMO.allCelestialData = planetData.concat(dwarfPlanetData);
+if (typeof cometData !== 'undefined') {
+    SPACEDEMO.allCelestialData.push(cometData);
+}

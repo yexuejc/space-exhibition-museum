@@ -1,7 +1,9 @@
 // ===== 太空探索博物馆 - 3D 太阳系场景 =====
 // 场景创建、太阳、行星、轨道、标注、星空
+(function(SPACEDEMO, win, doc, THREE, undefined) {
+    "use strict";
 
-var SPACEDEMO = {};
+    // SPACEDEMO 由参数传入
 
 function buildSolarSystem() {
     var container = document.getElementById('vrContainer');
@@ -804,6 +806,17 @@ function buildSolarSystem() {
     SPACEDEMO.isFullscreen = false;
     SPACEDEMO.targetZoomDist = null;
     SPACEDEMO.mapModeActive = false;
+
+    // ===== 统一天体运行时注册表（替换零散的单独引用）=====
+    SPACEDEMO.allBodies = [];
+    // 行星
+    SPACEDEMO.planets.forEach(function(p) { SPACEDEMO.allBodies.push(p); });
+    // 矮行星
+    ['pluto','ceres','eris'].forEach(function(key) {
+        if (SPACEDEMO[key]) SPACEDEMO.allBodies.push(SPACEDEMO[key]);
+    });
+    // 彗星
+    if (SPACEDEMO.comet) SPACEDEMO.allBodies.push(SPACEDEMO.comet);
 }
 
 // 创建银河背景
@@ -929,3 +942,10 @@ function createMilkyWay(scene) {
     scene.add(coreBand);
     SPACEDEMO.milkyWayCore = coreBand;
 }
+
+    // 公开接口
+    SPACEDEMO.buildSolarSystem = buildSolarSystem;
+    win.buildSolarSystem = buildSolarSystem;
+    SPACEDEMO.createMilkyWay = createMilkyWay;
+    win.createMilkyWay = createMilkyWay;
+})(window.SPACEDEMO || (window.SPACEDEMO = {}), window, document, window.THREE);

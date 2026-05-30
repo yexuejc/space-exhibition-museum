@@ -691,3 +691,14 @@ footer a:hover { text-decoration: underline; }
     .map-prompt-box { padding: 1.5rem; }
     .map-key-row { flex-direction: column; }
 }
+
+/* 加载动画 */
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* 全屏时锁定 body 滚动 */
+body.body-scroll-locked {
+    overflow: hidden !important;
+    height: 100% !important;
+}

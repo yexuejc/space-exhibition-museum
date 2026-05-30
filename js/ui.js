@@ -1,5 +1,7 @@
 // ===== 太空探索博物馆 - 界面交互模块 =====
 // 行星信息卡片、标签切换、全屏沉浸、聚焦动画、缩放滑块、时间控制
+(function(SPACEDEMO, win, doc, THREE, undefined) {
+    "use strict";
 
 // ===== 音频解说 =====
 var speechSynth = window.speechSynthesis;
@@ -370,11 +372,8 @@ function updateUILanguage() {
 
         card.style.bottom = '20px';
 
-        // 语音解说
-        if (typeof speakPlanet === 'function') {
-            speakPlanet(p);
-        }
-        // 更新语音条文本（语言切换时）
+        // 语音解说——不自动播放，改为手动点击按钮触发
+        // 仅更新语音条中的文本预览
         var sb = document.getElementById('speechBar');
         if (sb && planetNarration[p.name]) {
             var nt = currentLang === 'zh' ? planetNarration[p.name].zh : planetNarration[p.name].en;
@@ -525,10 +524,13 @@ function setupFullscreenToggle() {
             container.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;z-index:2000;';
             btn.innerHTML = '⛶';
             btn.style.color = '#ff8800';
+            // 锁住 body 滚动，避免 3D 场景外滚动事件干扰
+            document.body.classList.add('body-scroll-locked');
         } else {
             container.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;';
             btn.innerHTML = '⛶';
             btn.style.color = '#00ddff';
+            document.body.classList.remove('body-scroll-locked');
         }
         SPACEDEMO.renderer.setSize(window.innerWidth, window.innerHeight);
         if (SPACEDEMO.labelRenderer) {
@@ -577,16 +579,12 @@ function setupAutoTour() {
 
 function buildTourRoute() {
     tourRoute = [];
-    // 主行星
-    if (SPACEDEMO.planets) {
-        SPACEDEMO.planets.forEach(function(p) { tourRoute.push(p); });
+    // 使用统一天体列表（8 大行星 + 3 矮行星 + 彗星，共 12 站）
+    if (SPACEDEMO.allBodies) {
+        SPACEDEMO.allBodies.forEach(function(body) {
+            tourRoute.push(body);
+        });
     }
-    // 矮行星
-    if (SPACEDEMO.pluto) tourRoute.push({ mesh: SPACEDEMO.pluto.mesh, data: SPACEDEMO.pluto.data });
-    if (SPACEDEMO.ceres) tourRoute.push({ mesh: SPACEDEMO.ceres.mesh, data: SPACEDEMO.ceres.data });
-    if (SPACEDEMO.eris) tourRoute.push({ mesh: SPACEDEMO.eris.mesh, data: SPACEDEMO.eris.data });
-    // 彗星
-    if (SPACEDEMO.comet) tourRoute.push({ mesh: SPACEDEMO.comet.mesh, data: SPACEDEMO.comet.data });
 }
 
 function startTour() {
@@ -927,53 +925,19 @@ function setupInteractionEvents() {
             if (intersects.length > 0) {
                 var hit = intersects[0].object;
                 if (hit.userData && hit.userData.name) {
-                    // 双击行星
+                    // 双击天体（统一通过 allBodies 循环处理）
                     var found = false;
-                    SPACEDEMO.planets.forEach(function(p) {
-                        if (p.data.name === hit.userData.name) {
+                    for (var bi = 0; bi < SPACEDEMO.allBodies.length; bi++) {
+                        var body = SPACEDEMO.allBodies[bi];
+                        if (body.data.name === hit.userData.name) {
                             found = true;
-                            if (SPACEDEMO.focusedPlanet && SPACEDEMO.focusedPlanet.data.name === p.data.name) {
+                            if (SPACEDEMO.focusedPlanet && SPACEDEMO.focusedPlanet.data.name === body.data.name) {
                                 resetFocus();
                             } else {
-                                focusOnPlanet(p);
+                                focusOnPlanet(body);
                             }
+                            break;
                         }
-                    });
-                    // 双击冥王星
-                    if (!found && SPACEDEMO.pluto && SPACEDEMO.pluto.data.name === hit.userData.name) {
-                        if (SPACEDEMO.focusedPlanet && SPACEDEMO.focusedPlanet.data.name === SPACEDEMO.pluto.data.name) {
-                            resetFocus();
-                        } else {
-                            focusOnPlanet(SPACEDEMO.pluto);
-                        }
-                        found = true;
-                    }
-                    // 双击彗星
-                    if (!found && SPACEDEMO.comet && SPACEDEMO.comet.data.name === hit.userData.name) {
-                        if (SPACEDEMO.focusedPlanet && SPACEDEMO.focusedPlanet.data.name === SPACEDEMO.comet.data.name) {
-                            resetFocus();
-                        } else {
-                            focusOnPlanet(SPACEDEMO.comet);
-                        }
-                        found = true;
-                    }
-                    // 双击谷神星
-                    if (!found && SPACEDEMO.ceres && SPACEDEMO.ceres.data.name === hit.userData.name) {
-                        if (SPACEDEMO.focusedPlanet && SPACEDEMO.focusedPlanet.data.name === SPACEDEMO.ceres.data.name) {
-                            resetFocus();
-                        } else {
-                            focusOnPlanet(SPACEDEMO.ceres);
-                        }
-                        found = true;
-                    }
-                    // 双击阋神星
-                    if (!found && SPACEDEMO.eris && SPACEDEMO.eris.data.name === hit.userData.name) {
-                        if (SPACEDEMO.focusedPlanet && SPACEDEMO.focusedPlanet.data.name === SPACEDEMO.eris.data.name) {
-                            resetFocus();
-                        } else {
-                            focusOnPlanet(SPACEDEMO.eris);
-                        }
-                        found = true;
                     }
                     // 双击月球
                     if (!found && hit.userData.isMoon && SPACEDEMO.moonMesh) {
@@ -1010,34 +974,16 @@ function setupInteractionEvents() {
                 }
                 return;
             }
-            // 行星点击检测
+            // 行星点击检测（统一通过 allBodies 循环处理）
             if (hit.userData && hit.userData.name) {
                 var found = false;
-                SPACEDEMO.planets.forEach(function(p) {
-                    if (p.data.name === hit.userData.name) {
-                        showPlanetCard(p.data);
+                for (var bi = 0; bi < SPACEDEMO.allBodies.length; bi++) {
+                    var body = SPACEDEMO.allBodies[bi];
+                    if (body.data.name === hit.userData.name) {
+                        showPlanetCard(body.data);
                         found = true;
+                        break;
                     }
-                });
-                // 单击冥王星
-                if (!found && SPACEDEMO.pluto && SPACEDEMO.pluto.data.name === hit.userData.name) {
-                    showPlanetCard(SPACEDEMO.pluto.data);
-                    found = true;
-                }
-                // 单击彗星
-                if (!found && SPACEDEMO.comet && SPACEDEMO.comet.data.name === hit.userData.name) {
-                    showPlanetCard(SPACEDEMO.comet.data);
-                    found = true;
-                }
-                // 单击谷神星
-                if (!found && SPACEDEMO.ceres && SPACEDEMO.ceres.data.name === hit.userData.name) {
-                    showPlanetCard(SPACEDEMO.ceres.data);
-                    found = true;
-                }
-                // 单击阋神星
-                if (!found && SPACEDEMO.eris && SPACEDEMO.eris.data.name === hit.userData.name) {
-                    showPlanetCard(SPACEDEMO.eris.data);
-                    found = true;
                 }
                 // 单击月球
                 if (!found && hit.userData.isMoon && window.moonSciData) {
@@ -1121,3 +1067,37 @@ function setupResizeHandler() {
     });
     ro.observe(container);
 }
+
+    // 公开接口
+    var uiApi = {
+        toggleSpeech: toggleSpeech,
+        speakPlanet: speakPlanet,
+        pauseSpeech: pauseSpeech,
+        resumeSpeech: resumeSpeech,
+        stopSpeech: stopSpeech,
+        updateSpeechBtn: updateSpeechBtn,
+        updateSpeechBar: updateSpeechBar,
+        _: _,
+        updateUILanguage: updateUILanguage,
+        setupLabelsToggle: setupLabelsToggle,
+        setupLangToggle: setupLangToggle,
+        setupFullscreenToggle: setupFullscreenToggle,
+        setupAutoTour: setupAutoTour,
+        buildTourRoute: buildTourRoute,
+        startTour: startTour,
+        stopTour: stopTour,
+        nextTourStop: nextTourStop,
+        updateTour: updateTour,
+        focusOnPlanet: focusOnPlanet,
+        resetFocus: resetFocus,
+        setupZoomSlider: setupZoomSlider,
+        setupTimeControls: setupTimeControls,
+        updateDateLabel: updateDateLabel,
+        setupTipBar: setupTipBar,
+        setupInteractionEvents: setupInteractionEvents,
+        setupResizeHandler: setupResizeHandler
+    };
+    SPACEDEMO.ui = uiApi;
+    for (var _k in uiApi) { win[_k] = uiApi[_k]; }
+    // showPlanetCard/hidePlanetCard 已直接挂载到 window
+})(window.SPACEDEMO || (window.SPACEDEMO = {}), window, document, window.THREE);

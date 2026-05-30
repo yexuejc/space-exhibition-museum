@@ -1,6 +1,8 @@
 // ===== 太空探索博物馆 - 高德地图模式 =====
 // 支持自动无缝过渡：拉近地球 → 自动进入地图；缩小地图 → 自动回到最大地球
 // 高德 JS API 动态加载
+(function(SPACEDEMO, win, doc, THREE, undefined) {
+    "use strict";
 
 var mapInstance = null;
 var mapDom = null;
@@ -557,3 +559,17 @@ function checkAutoEnterMap() {
         openMapMode();
     }
 }
+
+    // 公开接口
+    var mapApi = {
+        setupMapModeButton: setupMapModeButton,
+        updateEnterMapButton: updateEnterMapButton,
+        checkAutoEnterMap: checkAutoEnterMap,
+        openMapMode: openMapMode,
+        exitMapMode: exitMapMode,
+        findEarth: findEarth,
+        canEnterMapMode: canEnterMapMode
+    };
+    SPACEDEMO.mapMode = mapApi;
+    for (var _k in mapApi) { win[_k] = mapApi[_k]; }
+})(window.SPACEDEMO || (window.SPACEDEMO = {}), window, document, window.THREE);

@@ -1,6 +1,10 @@
 // ===== 太空探索博物馆 - 小行星带 =====
 // 在火星(22)与木星(28)轨道之间生成粒子小行星带
 
+(function(SPACEDEMO, win, doc, THREE, undefined) {
+    "use strict";
+
+
 function createAsteroidBelt() {
     var scene = SPACEDEMO.scene;
     // 小行星带内径/外径
@@ -135,3 +139,11 @@ function updateAsteroids() {
         SPACEDEMO.kuiperBelt.rotation.y -= 0.00015;
     }
 }
+
+
+    // 公开接口
+    SPACEDEMO.createAsteroidBelt = createAsteroidBelt;
+    win.createAsteroidBelt = createAsteroidBelt;
+    SPACEDEMO.updateAsteroids = updateAsteroids;
+    win.updateAsteroids = updateAsteroids;
+})(window.SPACEDEMO || (window.SPACEDEMO = {}), window, document, window.THREE);

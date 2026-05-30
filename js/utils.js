@@ -1,6 +1,15 @@
 // ===== 太空探索博物馆 - 工具函数 =====
 // 时间引擎、粒子背景、数学工具
 
+// 状态变量（跨文件共享，无法封闭在 IIFE 内）
+var simTime, speedMultiplier = 1, isPaused = false, lastRealTime;
+var BASE_SPEED = 3600; // 1 现实秒 = 1 小时模拟时间
+
+(function(SPACEDEMO, win, doc, THREE, undefined) {
+    "use strict";
+
+// ===== 2D Canvas 粒子星空背景（增强闪烁版）=====
+
 // ===== 2D Canvas 粒子星空背景（增强闪烁版）=====
 function initParticles() {
     var canvas = document.createElement('canvas');
@@ -133,3 +142,25 @@ function zoomToSlider(dist) {
     var t = Math.log(clamped / ZOOM_MAX) / Math.log(ZOOM_MIN / ZOOM_MAX);
     return Math.round(t * 1000);
 }
+
+    // 导出所有跨文件使用的接口
+    var api = {
+        initParticles: initParticles,
+        initTimeEngine: initTimeEngine,
+        updateTime: updateTime,
+        getSimDate: getSimDate,
+        setSimulationDate: setSimulationDate,
+        getPlanetAngle: getPlanetAngle,
+        getPlanetRotation: getPlanetRotation,
+        easeOutCubic: easeOutCubic,
+        sliderToZoom: sliderToZoom,
+        zoomToSlider: zoomToSlider
+    };
+    SPACEDEMO.utils = api;
+    // 向后兼容：旧代码通过全局变量引用函数
+    for (var _k in api) { win[_k] = api[_k]; }
+    // 状态变量同步到 SPACEDEMO
+    SPACEDEMO.simTime = simTime;
+    SPACEDEMO.speedMultiplier = speedMultiplier;
+    SPACEDEMO.isPaused = isPaused;
+})(window.SPACEDEMO || (window.SPACEDEMO = {}), window, document, window.THREE);

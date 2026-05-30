@@ -1,6 +1,10 @@
 // ===== 太空探索博物馆 - 流星雨系统 =====
 // 夜空随机出现流星，发光头部+渐变拖尾
 
+(function(SPACEDEMO, win, doc, THREE, undefined) {
+    "use strict";
+
+
 var MAX_METEORS = 5;
 var meteorList = [];
 var meteorTimer = 0;
@@ -178,3 +182,13 @@ function clearMeteors() {
     }
     meteorList = [];
 }
+
+
+    // 公开接口
+    SPACEDEMO.initMeteors = initMeteors;
+    win.initMeteors = initMeteors;
+    SPACEDEMO.updateMeteors = updateMeteors;
+    win.updateMeteors = updateMeteors;
+    SPACEDEMO.clearMeteors = clearMeteors;
+    win.clearMeteors = clearMeteors;
+})(window.SPACEDEMO || (window.SPACEDEMO = {}), window, document, window.THREE);

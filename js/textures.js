@@ -1,5 +1,7 @@
 // ===== 太空探索博物馆 - 纹理生成 =====
 // 程序化纹理（除地球使用 NASA CDN 真实纹理外，其余行星均用 Canvas 生成）
+(function(SPACEDEMO, window, document, THREE, undefined) {
+    "use strict";
 
 // 简易 3D Simplex Noise
 var SimplexNoise = (function() {
@@ -281,3 +283,8 @@ function getPlanetTexture(p) {
         [0, 200,180,160], [0.5, 220,200,180], [1.0, 200,180,160]
     ], { scale:5, amount:5 });
 }
+
+    // 公开接口
+    SPACEDEMO.getPlanetTexture = getPlanetTexture;
+    window.getPlanetTexture = getPlanetTexture; // 向后兼容
+})(window.SPACEDEMO || (window.SPACEDEMO = {}), window, document, window.THREE);

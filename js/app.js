@@ -1,5 +1,7 @@
 // ===== 太空探索博物馆 - 应用入口 =====
 // 场景初始化 + 主循环（整合所有模块）
+(function(SPACEDEMO, win, doc, THREE, undefined) {
+    "use strict";
 
 var zoomFromSlider = false;
 
@@ -9,6 +11,22 @@ function initVR() {
         document.getElementById('vrContainer').innerHTML =
             '<div style="color:#f44;padding:40px;text-align:center;">❌ Three.js 库加载失败，请检查网络连接</div>';
         return;
+    }
+
+    // 检查 WebGL 支持
+    try {
+        var testCanvas = document.createElement('canvas');
+        var gl = testCanvas.getContext('webgl') || testCanvas.getContext('experimental-webgl');
+        if (!gl) {
+            document.getElementById('vrContainer').innerHTML =
+                '<div style="color:#ff8800;padding:40px;text-align:center;font-size:18px;">' +
+                '💫 您的设备或浏览器暂不支持 WebGL 3D 渲染。<br>' +
+                '<span style="font-size:14px;color:rgba(255,255,255,0.6);">' +
+                '建议使用最新版 Chrome、Firefox 或 Edge 浏览器打开。</span></div>';
+            return;
+        }
+    } catch(e) {
+        // WebGL 检测异常时继续尝试
     }
 
     // 1. 构建 3D 太阳系场景
@@ -35,7 +53,6 @@ function initVR() {
     setupNavigationPanel();
     setupInteractionEvents();
     setupResizeHandler();
-    setupSpeechControl();
 
     // 6. 初始化流星雨
     initMeteors();
@@ -53,6 +70,12 @@ function initVR() {
     SPACEDEMO.labelObjects.forEach(function(lo) {
         lo.div.style.display = '';
     });
+
+    // 隐藏加载指示器
+    var loadingEl = document.querySelector('#vrContainer #loadingIndicator');
+    if (loadingEl) {
+        loadingEl.style.display = 'none';
+    }
 
     // 8. VR 渲染器启用
     if (SPACEDEMO.renderer.xr) {
@@ -77,114 +100,88 @@ function initVR() {
         // 更新时间
         updateTime();
 
-        // 更新行星位置
-        SPACEDEMO.planets.forEach(function(p) {
-            var angle = getPlanetAngle(p.data);
-            p.mesh.position.x = Math.cos(angle) * p.data.dist;
-            p.mesh.position.z = Math.sin(angle) * p.data.dist;
-            p.mesh.rotation.y = getPlanetRotation(p.data);
-            // 土星环跟随
-            if (p.ringMesh) {
-                p.ringMesh.position.copy(p.mesh.position);
-                p.ringMesh.rotation.y += 0.001;
-            }
-        });
-
-        // 更新冥王星位置（倾斜轨道）
-        if (SPACEDEMO.pluto) {
-            var pAngle = getPlanetAngle(SPACEDEMO.pluto.data);
-            var pIncline = (SPACEDEMO.pluto.data.orbitalInclination || 0) * Math.PI / 180;
-            var pDist = SPACEDEMO.pluto.data.dist;
-            SPACEDEMO.pluto.mesh.position.set(
-                Math.cos(pAngle) * pDist,
-                Math.sin(pAngle) * pDist * Math.sin(pIncline),
-                Math.sin(pAngle) * pDist * Math.cos(pIncline)
-            );
-            SPACEDEMO.pluto.mesh.rotation.y = getPlanetRotation(SPACEDEMO.pluto.data);
-        }
-
-        // 更新更多矮行星位置（谷神星、阋神星）
-        ['ceres','eris'].forEach(function(key) {
-            if (SPACEDEMO[key]) {
-                var obj = SPACEDEMO[key];
-                var angle = getPlanetAngle(obj.data);
-                var incl = (obj.data.orbitalInclination || 0) * Math.PI / 180;
-                obj.mesh.position.set(
-                    Math.cos(angle) * obj.data.dist,
-                    Math.sin(angle) * obj.data.dist * Math.sin(incl),
-                    Math.sin(angle) * obj.data.dist * Math.cos(incl)
-                );
-                obj.mesh.rotation.y = getPlanetRotation(obj.data);
-            }
-        });
-
-        // ===== 彗星轨道更新 =====
-        if (SPACEDEMO.comet) {
-            var c = SPACEDEMO.comet;
-            // 沿椭圆轨道推进角度
+        // ===== 统一天体位置更新（替代原来的 4 段零散代码）=====
+        SPACEDEMO.allBodies.forEach(function(body) {
+            var data = body.data;
+            var angle = getPlanetAngle(data);
             var speedFactor = SPACEDEMO.speedMultiplier || 1;
-            c.angle += 0.001 * speedFactor * (2 * Math.PI / c.data.orbitalPeriod);
-            var theta = c.angle;
-            var incl = (c.data.orbitalInclination || 0) * Math.PI / 180;
-            var a = (c.data.perihelionDist + c.data.aphelionDist) / 2;
-            var ecc = (c.data.aphelionDist - c.data.perihelionDist) / (c.data.perihelionDist + c.data.aphelionDist);
-            var r = a * (1 - ecc * ecc) / (1 + ecc * Math.cos(theta));
-            // 计算近日点偏移角度
-            var periOffset = (c.data.argOfPerihelion || 0) * Math.PI / 180;
-            var th = theta + periOffset;
-            var x = Math.cos(th) * r;
-            var z = Math.sin(th) * r;
-            var y = Math.sin(th) * r * Math.sin(incl);
-            z *= Math.cos(incl);
-            c.mesh.position.set(x, y, z);
-            c.mesh.rotation.y += 0.005 * speedFactor;
 
-            // ---- 更新彗星尾 ----
-            // 尾巴方向：从太阳指向彗星（背离太阳）
-            var sunDir = c.mesh.position.clone().normalize();
-            // 距离太阳的距离决定尾巴强度
-            var distToSun = c.mesh.position.length();
-            // 近日点时强度最大，远日点时最小
-            var tailStrength = Math.max(0, 1 - (distToSun - c.data.perihelionDist) / (c.data.aphelionDist - c.data.perihelionDist));
-            tailStrength = Math.pow(tailStrength, 0.6); // 非线性映射
+            if (data.type === 'comet') {
+                // ---- 彗星：椭圆轨道 + 动态尾巴 ----
+                var c = body;
+                c.angle += 0.001 * speedFactor * (2 * Math.PI / data.orbitalPeriod);
+                var theta = c.angle;
+                var incl = (data.orbitalInclination || 0) * Math.PI / 180;
+                var a = (data.perihelionDist + data.aphelionDist) / 2;
+                var ecc = (data.aphelionDist - data.perihelionDist) / (data.perihelionDist + data.aphelionDist);
+                var r = a * (1 - ecc * ecc) / (1 + ecc * Math.cos(theta));
+                var periOffset = (data.argOfPerihelion || 0) * Math.PI / 180;
+                var th = theta + periOffset;
+                var x = Math.cos(th) * r;
+                var z = Math.sin(th) * r;
+                var y = Math.sin(th) * r * Math.sin(incl);
+                z *= Math.cos(incl);
+                c.mesh.position.set(x, y, z);
+                c.mesh.rotation.y += 0.005 * speedFactor;
 
-            var tailLen = 1.5 + tailStrength * 7;  // 尾巴长度（最大~8.5，近日点不超地球轨道）
-            var pos = c.tailGeom.attributes.position.array;
-            var count = c.tailCount;
+                // 彗星尾巴更新
+                var sunDir = c.mesh.position.clone().normalize();
+                var distToSun = c.mesh.position.length();
+                var tailStrength = Math.max(0, 1 - (distToSun - data.perihelionDist) / (data.aphelionDist - data.perihelionDist));
+                tailStrength = Math.pow(tailStrength, 0.6);
+                var tailLen = 1.5 + tailStrength * 7;
+                var pos = c.tailGeom.attributes.position.array;
+                var count = c.tailCount;
+                for (var ti = 0; ti < count; ti++) {
+                    var t = (ti / count);
+                    var dist = t * tailLen;
+                    var spread = (1 - t) * 0.6 + 0.05;
+                    var bend = t * t * 0.2;
+                    var spreadAngle = c.tailSeedAngles[ti];
+                    var offset = c.tailSeedOffsets[ti];
+                    var pi3 = ti / count;
+                    var sz = dist * spread * Math.sin(spreadAngle + pi3 * 0.5) * (0.8 + 0.4 * Math.sin(offset + ti * 0.3));
+                    var sy = dist * spread * Math.cos(spreadAngle + pi3 * 0.3) * (0.8 + 0.4 * Math.cos(offset + ti * 0.5));
+                    var sx = -dist + bend * dist;
+                    var idx = ti * 3;
+                    pos[idx] = sx;
+                    pos[idx+1] = sy;
+                    pos[idx+2] = sz;
+                }
+                c.tailGeom.attributes.position.needsUpdate = true;
+                // 透明度随距离变化
+                c.tailMat.opacity = 0.1 + tailStrength * 0.3;
+                // 旋转尾巴指向背离太阳方向
+                var quat = new THREE.Quaternion().setFromUnitVectors(
+                    new THREE.Vector3(0, 0, 1),
+                    sunDir
+                );
+                c.tailPoints.quaternion.copy(quat);
+                c.tailPoints.position.copy(c.mesh.position);
+            } else {
+                // ---- 行星/矮行星：圆形/倾斜轨道 ----
+                var incl = (data.orbitalInclination || 0) * Math.PI / 180;
+                if (incl === 0) {
+                    // 平面轨道（8大行星）
+                    body.mesh.position.x = Math.cos(angle) * data.dist;
+                    body.mesh.position.z = Math.sin(angle) * data.dist;
+                } else {
+                    // 倾斜轨道（矮行星）
+                    body.mesh.position.set(
+                        Math.cos(angle) * data.dist,
+                        Math.sin(angle) * data.dist * Math.sin(incl),
+                        Math.sin(angle) * data.dist * Math.cos(incl)
+                    );
+                }
+                body.mesh.rotation.y = getPlanetRotation(data);
 
-            // 构建正交基（用于尾巴横向扩散）
-            var up = new THREE.Vector3(0, 1, 0);
-            if (Math.abs(sunDir.dot(up)) > 0.9) up.set(1, 0, 0);
-            var right = new THREE.Vector3().crossVectors(sunDir, up).normalize();
-            var localUp = new THREE.Vector3().crossVectors(right, sunDir).normalize();
-
-            for (var i = 0; i < count; i++) {
-                var t = i / count;
-                // 使用预生成种子（避免每帧随机闪烁）
-                var angleH = c.tailSeedAngles[i];
-                // 粒子沿尾巴方向分布，近端密远端疏
-                var dist = tailLen * Math.pow(t, 0.7);
-                // 横向扩散随距离增大（减小扩散范围）
-                var spread = 0.15 + t * 0.6;
-                var sideX = Math.cos(angleH) * spread * t;
-                var sideY = Math.sin(angleH) * spread * t * 0.2;
-                // 弯曲效果（太阳风）
-                var bend = t * t * 1.5 * tailStrength;
-                // 基础尾向量
-                var basePos = new THREE.Vector3().copy(sunDir).multiplyScalar(dist);
-                basePos.add(right.clone().multiplyScalar(sideX));
-                basePos.add(localUp.clone().multiplyScalar(sideY));
-                basePos.y -= bend * 0.15;
-
-                pos[i*3] = c.mesh.position.x - basePos.x;
-                pos[i*3+1] = c.mesh.position.y - basePos.y;
-                pos[i*3+2] = c.mesh.position.z - basePos.z;
+                // 行星环跟随
+                if (body.ringMesh) {
+                    body.ringMesh.position.copy(body.mesh.position);
+                    body.ringMesh.rotation.y += 0.001;
+                }
             }
-            c.tailGeom.attributes.position.needsUpdate = true;
-            // 统一控制尾巴大小和透明度（调暗）
-            c.tailMat.size = 0.3 + tailStrength * 0.8;
-            c.tailMat.opacity = 0.1 + tailStrength * 0.3;
-        }
+        });
 
         // 更新轨道标记点位置
         if (SPACEDEMO.orbitMarkers) {
@@ -339,9 +336,42 @@ function initVR() {
     animate();
 }
 
-// ===== 启动逻辑 =====
+// ===== 启动逻辑（延迟加载：用户点击"进入太阳系"后才初始化 3D 场景）=====
+var vrInitialized = false;
+
+function tryInitVR() {
+    if (vrInitialized) return;
+    // 检查是否已定位到 3D 场景区域（hash 匹配）
+    if (window.location.hash !== '#solarSystemVR') return;
+
+    vrInitialized = true;
+
+    // 显示加载指示器
+    var loadingEl = document.querySelector('#vrContainer #loadingIndicator');
+    if (loadingEl) loadingEl.style.display = '';
+
+    initVR();
+    // 自动进入全屏沉浸模式（可被用户退出）
+    setTimeout(function() {
+        var fsBtn = document.getElementById('fullscreenBtn');
+        if (fsBtn && !SPACEDEMO.isFullscreen) {
+            fsBtn.click();
+        }
+    }, 800);
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     initParticles();
-    // 延迟初始化 VR，让页面先渲染出来
-    setTimeout(initVR, 500);
+    // 不自动初始化 3D，等待用户进入
+    tryInitVR();
 });
+
+// 监听 hash 变化（点击"进入太阳系"链接触发）
+window.addEventListener('hashchange', function() {
+    tryInitVR();
+});
+
+    // 公开接口
+    SPACEDEMO.initVR = initVR;
+    // initVR 内部有 window.initVR = initVR 的赋值
+})(window.SPACEDEMO || (window.SPACEDEMO = {}), window, document, window.THREE);
